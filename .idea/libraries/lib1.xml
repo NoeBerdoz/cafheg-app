@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="lib1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._opentest4j-1.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._apiguardian-api-1.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._dbunit-2.7.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._slf4j-api-1.7.25.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._junit-jupiter-5.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._junit-jupiter-api-5.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._junit-platform-engine-1.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._junit-jupiter-engine-5.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._junit-platform-commons-1.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/__MACOSX/cafheg-master/lib/._junit-jupiter-params-5.7.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
