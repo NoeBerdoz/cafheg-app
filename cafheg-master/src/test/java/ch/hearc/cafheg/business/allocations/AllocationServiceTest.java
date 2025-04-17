@@ -71,7 +71,7 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
   }
-
+//nouveaux tests pour la partie 2 de l'exo 1
   @Test
     void getParentDroitAllocation_Parent1AL_ShouldReturnParent1() {
         String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
