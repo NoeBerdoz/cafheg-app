@@ -162,5 +162,4 @@ class AllocationServiceTest {
             "parent2ActiviteLucrative", true, "parent1Salaire", 2000, "parent2Salaire", 3000));
         assertThat(result).isEqualTo("Parent2");
     }
-
 }
