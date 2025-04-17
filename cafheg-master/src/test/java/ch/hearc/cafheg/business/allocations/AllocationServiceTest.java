@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -69,5 +71,96 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
   }
+
+  @Test
+    void getParentDroitAllocation_Parent1AL_ShouldReturnParent1() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
+            "parent2ActiviteLucrative", false));
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent2AL_ShouldReturnParent2() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", false,
+            "parent2ActiviteLucrative", true));
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent1SalaryHigher_ShouldReturnParent1() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", false,
+            "parent2ActiviteLucrative", false, "parent1Salaire", 3000, "parent2Salaire", 2000));
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent2SalaryHigher_ShouldReturnParent2() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", false,
+            "parent2ActiviteLucrative", false, "parent1Salaire", 2000, "parent2Salaire", 3000));
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void getParentDroitAllocation_EqualSalary_ShouldReturnParent2() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", false,
+            "parent2ActiviteLucrative", false, "parent1Salaire", 2000, "parent2Salaire", 2000));
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent1ALAndSalaryHigher_ShouldReturnParent1() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
+            "parent2ActiviteLucrative", false, "parent1Salaire", 3000, "parent2Salaire", 2000));
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent2ALAndSalaryHigher_ShouldReturnParent2() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", false,
+            "parent2ActiviteLucrative", true, "parent1Salaire", 2000, "parent2Salaire", 3000));
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent1ALAndParent2AL_ShouldReturnParent1() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
+            "parent2ActiviteLucrative", true, "parent1Salaire", 2000, "parent2Salaire", 3000));
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent1ALAndParent2SalaryHigher_ShouldReturnParent1() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
+            "parent2ActiviteLucrative", false, "parent1Salaire", 2000, "parent2Salaire", 3000));
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent2ALAndParent1SalaryHigher_ShouldReturnParent2() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", false,
+            "parent2ActiviteLucrative", true, "parent1Salaire", 3000, "parent2Salaire", 2000));
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent1ALAndParent2ALAndSalaryEqual_ShouldReturnParent1() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
+            "parent2ActiviteLucrative", true, "parent1Salaire", 2000, "parent2Salaire", 2000));
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent1ALAndParent2ALAndSalaryHigher_ShouldReturnParent1() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
+            "parent2ActiviteLucrative", true, "parent1Salaire", 3000, "parent2Salaire", 2000));
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void getParentDroitAllocation_Parent1ALAndParent2ALAndSalaryLower_ShouldReturnParent2() {
+        String result = allocationService.getParentDroitAllocation(Map.of("parent1ActiviteLucrative", true,
+            "parent2ActiviteLucrative", true, "parent1Salaire", 2000, "parent2Salaire", 3000));
+        assertThat(result).isEqualTo("Parent2");
+    }
 
 }
