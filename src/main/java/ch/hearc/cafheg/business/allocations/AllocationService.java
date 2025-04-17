@@ -26,19 +26,51 @@ public class AllocationService {
   }
 
 
-    public String getParentDroitAllocation(ParentsInfo info) {
-      if (info.isParent1Actif() && !info.isParent2Actif()) {
-        return "PARENT_1";
-      } else if (!info.isParent1Actif() && info.isParent2Actif()) {
-        return "PARENT_2";
-      }
+  public String getParentDroitAllocation(ParentsInfo info) {
+    // Cas 1 : un seul parent a une activité lucrative
+    if (info.isParent1Actif() && !info.isParent2Actif()) {
+      return "PARENT_1";
+    } else if (!info.isParent1Actif() && info.isParent2Actif()) {
+      return "PARENT_2";
+    }
 
-      if (info.getParent1Salaire().compareTo(info.getParent2Salaire()) > 0) {
+    // Cas 2 : les deux parents ont une activité lucrative
+    if (!info.isAutoriteParentalePartagee()) {
+      // Un seul parent a l’autorité parentale
+      if (info.isParent1Actif()) {
         return "PARENT_1";
       } else {
         return "PARENT_2";
       }
+    } else {
+      // Les deux ont l’autorité parentale
+      if (!info.isParentsEnsemble()) {
+        // Parents séparés
+        if (info.isParent1VitAvecEnfant() && !info.isParent2VitAvecEnfant()) {
+          return "PARENT_1";
+        } else if (!info.isParent1VitAvecEnfant() && info.isParent2VitAvecEnfant()) {
+          return "PARENT_2";
+        } else {
+          // Les deux vivent avec l'enfant → canton de domicile
+          if (info.isParent1TravailleDansCantonEnfant()) {
+            return "PARENT_1";
+          } else if (info.isParent2TravailleDansCantonEnfant()) {
+            return "PARENT_2";
+          }
+        }
+      } else {
+        // Parents vivent ensemble
+        if (info.getParent1Salaire().compareTo(info.getParent2Salaire()) > 0) {
+          return "PARENT_1";
+        } else {
+          return "PARENT_2";
+        }
+      }
     }
+
+    // Cas par défaut si aucune règle ne s’applique (optionnel)
+    return "INDETERMINE";
+  }
 
 }
 

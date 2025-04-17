@@ -21,6 +21,27 @@ class AllocationServiceTest {
   private AllocataireMapper allocataireMapper;
   private AllocationMapper allocationMapper;
 
+  // Service pour faciliter les tests
+  private ParentsInfo createParentsInfo(
+          boolean parent1ActiviteLucrative,
+          boolean parent2ActiviteLucrative,
+          BigDecimal parent1Salaire,
+          BigDecimal parent2Salaire
+  ) {
+    return new ParentsInfo(
+            parent1ActiviteLucrative,
+            parent2ActiviteLucrative,
+            parent1Salaire,
+            parent2Salaire,
+            true,   // autoriteParentalePartagee
+            true,   // parentsEnsemble
+            true,   // parent1VitAvecEnfant
+            true,   // parent2VitAvecEnfant
+            true,   // parent1TravailleDansCantonEnfant
+            true    // parent2TravailleDansCantonEnfant
+    );
+  }
+
   @BeforeEach
   void setUp() {
     allocataireMapper = Mockito.mock(AllocataireMapper.class);
@@ -71,58 +92,129 @@ class AllocationServiceTest {
 
   @Test
   void getParentDroitAllocation_Parent1ActifParent2Inactif_ReturnsParent1() {
-    ParentsInfo info = new ParentsInfo(true, false, BigDecimal.ZERO, BigDecimal.ZERO);
+    ParentsInfo info = createParentsInfo(
+            true,   // parent1ActiviteLucrative
+            false,   // parent2ActiviteLucrative
+            BigDecimal.ZERO, // parent1Salaire
+            BigDecimal.ZERO  // parent2Salaire
+    );
     String result = allocationService.getParentDroitAllocation(info);
     assertThat(result).isEqualTo("PARENT_1");
   }
 
   @Test
   void getParentDroitAllocation_Parent2ActifParent1Inactif_ReturnsParent2() {
-    ParentsInfo info = new ParentsInfo(false, true, BigDecimal.ZERO, BigDecimal.ZERO);
+    ParentsInfo info = createParentsInfo(
+            false,   // parent1ActiviteLucrative
+            true,   // parent2ActiviteLucrative
+            BigDecimal.ZERO, // parent1Salaire
+            BigDecimal.ZERO  // parent2Salaire
+    );
     String result = allocationService.getParentDroitAllocation(info);
     assertThat(result).isEqualTo("PARENT_2");
   }
 
   @Test
   void getParentDroitAllocation_BothInactive_SalaireParent1PlusHaut_ReturnsParent1() {
-    ParentsInfo info = new ParentsInfo(false, false, new BigDecimal("5000"), new BigDecimal("3000"));
+    ParentsInfo info = createParentsInfo(
+            false,   // parent1ActiviteLucrative
+            false,   // parent2ActiviteLucrative
+            new BigDecimal("5000"), // parent1Salaire
+            new BigDecimal("3000")  // parent2Salaire
+    );
     String result = allocationService.getParentDroitAllocation(info);
     assertThat(result).isEqualTo("PARENT_1");
   }
 
   @Test
   void getParentDroitAllocation_BothInactive_SalaireParent2PlusHaut_ReturnsParent2() {
-    ParentsInfo info = new ParentsInfo(false, false, new BigDecimal("3000"), new BigDecimal("5000"));
+    ParentsInfo info = createParentsInfo(
+            false,   // parent1ActiviteLucrative
+            false,   // parent2ActiviteLucrative
+            new BigDecimal("3000"), // parent1Salaire
+            new BigDecimal("5000")  // parent2Salaire
+    );
     String result = allocationService.getParentDroitAllocation(info);
     assertThat(result).isEqualTo("PARENT_2");
   }
 
   @Test
   void getParentDroitAllocation_BothActif_SalaireParent1PlusHaut_ReturnsParent1() {
-    ParentsInfo info = new ParentsInfo(true, true, new BigDecimal("6000"), new BigDecimal("4000"));
+    ParentsInfo info = createParentsInfo(
+            true,   // parent1ActiviteLucrative
+            true,   // parent2ActiviteLucrative
+            new BigDecimal("6000"), // parent1Salaire
+            new BigDecimal("4000")  // parent2Salaire
+    );
     String result = allocationService.getParentDroitAllocation(info);
     assertThat(result).isEqualTo("PARENT_1");
   }
 
   @Test
   void getParentDroitAllocation_BothActif_SalaireParent2PlusHaut_ReturnsParent2() {
-    ParentsInfo info = new ParentsInfo(true, true, new BigDecimal("4500"), new BigDecimal("7500"));
+    ParentsInfo info = new ParentsInfo(
+            true,   // parent1ActiviteLucrative
+            true,   // parent2ActiviteLucrative
+            new BigDecimal("4500"), // parent1Salaire
+            new BigDecimal("7500"), // parent2Salaire
+            true,   // autoriteParentalePartagee
+            false,  // parentsEnsemble
+            true,   // parent1VitAvecEnfant
+            false,  // parent2VitAvecEnfant
+            true,   // parent1TravailleDansCantonEnfant
+            false   // parent2TravailleDansCantonEnfant
+    );
     String result = allocationService.getParentDroitAllocation(info);
-    assertThat(result).isEqualTo("PARENT_2");
+    assertThat(result).isEqualTo("PARENT_1");
   }
 
   @Test
   void getParentDroitAllocation_BothActif_SalairesEgaux_ReturnsParent2() {
-    ParentsInfo info = new ParentsInfo(true, true, new BigDecimal("5000"), new BigDecimal("5000"));
+    ParentsInfo info = createParentsInfo(
+            true,   // parent1ActiviteLucrative
+            true,   // parent2ActiviteLucrative
+            new BigDecimal("5000"), // parent1Salaire
+            new BigDecimal("5000")  // parent2Salaire
+    );
     String result = allocationService.getParentDroitAllocation(info);
     assertThat(result).isEqualTo("PARENT_2");
   }
 
   @Test
   void getParentDroitAllocation_NullSalaireHandled_ReturnsParent2() {
-    ParentsInfo info = new ParentsInfo(false, false, null, null);
+    ParentsInfo info = createParentsInfo(
+            false,   // parent1ActiviteLucrative
+            false,   // parent2ActiviteLucrative
+            null, // parent1Salaire
+            null  // parent2Salaire
+    );
     String result = allocationService.getParentDroitAllocation(info);
     assertThat(result).isEqualTo("PARENT_2");
   }
+
+  @Test
+  void getParentDroitAllocation_SalaireParent1NullParent2NonNull_ReturnsParent2() {
+    ParentsInfo info = createParentsInfo(
+            false,   // parent1ActiviteLucrative
+            false,   // parent2ActiviteLucrative
+            null, // parent1Salaire
+            new BigDecimal("4000")  // parent2Salaire
+    );
+    String result = allocationService.getParentDroitAllocation(info);
+    assertThat(result).isEqualTo("PARENT_2");
+  }
+
+  @Test
+  void getParentDroitAllocation_SalaireParent2NullParent1NonNull_ReturnsParent1() {
+    ParentsInfo info = createParentsInfo(
+            false,   // parent1ActiviteLucrative
+            false,   // parent2ActiviteLucrative
+            new BigDecimal("4000"), // parent1Salaire
+            null  // parent2Salaire
+    );
+    String result = allocationService.getParentDroitAllocation(info);
+    assertThat(result).isEqualTo("PARENT_1");
+  }
+
 
 }
