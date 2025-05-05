@@ -8,9 +8,8 @@ import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -68,6 +67,28 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getCanton()).isEqualTo(Canton.FR),
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
+  }
+
+  @Test
+  void givenParent1HasActivityAndParent2DoesNot_whenGetParentDroitAllocation_thenReturnParent1() {
+    Map<String, Object> params = new HashMap<>();
+    params.put("parent1ActiviteLucrative", true);
+    params.put("parent2ActiviteLucrative", false);
+
+    String result = allocationService.getParentDroitAllocation(params);
+
+    assertThat(result).isEqualTo("Parent1");
+  }
+
+  @Test
+  void givenParent2HasActivityAndParent1DoesNot_whenGetParentDroitAllocation_thenReturnParent2() {
+    Map<String, Object> params = new HashMap<>();
+    params.put("parent1ActiviteLucrative", false);
+    params.put("parent2ActiviteLucrative", true);
+
+    String result = allocationService.getParentDroitAllocation(params);
+
+    assertThat(result).isEqualTo("Parent2");
   }
 
 }
