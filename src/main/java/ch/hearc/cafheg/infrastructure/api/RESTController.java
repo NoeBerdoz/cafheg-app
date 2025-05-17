@@ -90,15 +90,15 @@ public class RESTController {
    *
    * <p>This operation is conditional:
    * <ul>
-   * <li>The recipient must exist.
-   * <li>The recipient must not have any associated payments (versements).
+   * <li>The allocataire must exist.
+   * <li>The allocataire must not have any associated versements.
    * </ul>
    *
    * <p>Responds with:
    * <ul>
    * <li>204 No Content on successful deletion.
-   * <li>404 Not Found if the recipient with the given ID does not exist.
-   * <li>409 Conflict if the recipient cannot be deleted due to existing payments.
+   * <li>404 Not Found if the allocataire with the given ID does not exist.
+   * <li>409 Conflict if the allocataire cannot be deleted due to existing versements.
    * <li>500 Internal Server Error for other unexpected issues.
    * </ul>
    */
@@ -124,21 +124,21 @@ public class RESTController {
 /**
  * Handles PUT requests to update the last name and first name of an allocataire.
  * The allocataire is identified by {allocataireId} in the path.
- * The request body should be a JSON object containing 'name' (for the new last name)
- * and 'firstname' (for the new first name).
+ * The request body should be a JSON object containing 'lastname'
+ * and 'firstname'.
  *
  * <p>This operation is conditional:
  * <ul>
- * <li>The recipient must exist.
+ * <li>The allocataire must exist.
  * <li>At least one of the names (last or first) must be different from the current values.
  * <li>The AVS number is not modified.
  * </ul>
  *
  * <p>Responds with:
  * <ul>
- * <li>200 OK and the updated recipient data on success.
+ * <li>200 OK and the updated allocataire data on success.
  * <li>400 Bad Request if the input is invalid (e.g., missing names, no changes detected).
- * <li>404 Not Found if the recipient with the given ID does not exist.
+ * <li>404 Not Found if the allocataire with the given ID does not exist.
  * <li>500 Internal Server Error for other unexpected issues.
  * </ul>
  */
@@ -148,11 +148,11 @@ public class RESTController {
           @RequestBody Map<String, String> updatePayload
   ) {
     try {
-      String newNom = updatePayload.get("name");
+      String newNom = updatePayload.get("lastname");
       String newPrenom = updatePayload.get("firstname");
 
       if (newNom == null || newPrenom == null) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Les champs 'name' et 'firstname' sont requis.");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Les champs 'lastname' et 'firstname' sont requis.");
       }
 
       Allocataire updatedAllocataire = inTransaction(
