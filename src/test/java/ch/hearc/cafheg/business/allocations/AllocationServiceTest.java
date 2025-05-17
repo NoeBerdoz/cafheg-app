@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import ch.hearc.cafheg.business.common.Montant;
 import ch.hearc.cafheg.business.exceptions.AllocataireHasVersementsException;
 import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
+import ch.hearc.cafheg.business.exceptions.NoChangeToUpdateException;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import java.math.BigDecimal;
@@ -128,6 +129,143 @@ class AllocationServiceTest {
     Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
     Mockito.verify(versementMapper, never()).countVersementsByAllocataireId(allocataireId);
     Mockito.verify(allocataireMapper, never()).deleteById(allocataireId);
+  }
+
+  @Test
+  void updateAllocataire_GivenNameAndFirstNameChanged_ShouldUpdateAndReturnUpdatedAllocataire() {
+    long allocataireId = 10L;
+    NoAVS avs = new NoAVS("AVS10");
+    Allocataire existingAllocataire = new Allocataire(avs, "OldNom", "OldPrenom");
+
+    String newName = "NewNom";
+    String newFirstname = "NewPrenom";
+
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(existingAllocataire);
+    Mockito.when(allocataireMapper.updateNameAndFirstname(allocataireId, newName, newFirstname)).thenReturn(true);
+
+    Allocataire result = allocationService.updateAllocataire(allocataireId, newName, newFirstname);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getNom()).isEqualTo(newName);
+    assertThat(result.getPrenom()).isEqualTo(newFirstname);
+    assertThat(result.getNoAVS()).isEqualTo(avs); // Ensure AVS is never changed
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(allocataireMapper, times(1)).updateNameAndFirstname(allocataireId, newName, newFirstname);
+  }
+
+  @Test
+  void updateAllocataire_GivenNewNameAndExistingFirstname_ShouldUpdateSuccessfullyAndReturnUpdatedAllocataire() {
+    long allocataireId = 11L;
+    NoAVS avs = new NoAVS("AVS11");
+    String existingFirstname = "Prenom";
+    Allocataire existingAllocataire = new Allocataire(avs, "OldNom", existingFirstname);
+
+    String newName = "NewNom";
+
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(existingAllocataire);
+    Mockito.when(allocataireMapper.updateNameAndFirstname(allocataireId, newName, existingFirstname)).thenReturn(true);
+
+    Allocataire result = allocationService.updateAllocataire(allocataireId, newName, existingFirstname);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getNom()).isEqualTo(newName);
+    assertThat(result.getPrenom()).isEqualTo(existingFirstname);
+    assertThat(result.getNoAVS()).isEqualTo(avs); // Ensure AVS is never changed
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(allocataireMapper, times(1)).updateNameAndFirstname(allocataireId, newName, existingFirstname);
+  }
+
+  @Test
+  void updateAllocataire_GivenExistingNameAndNewFirstname_ShouldUpdateSuccessfullyAndReturnUpdatedAllocataire() {
+    long allocataireId = 11L;
+    NoAVS avs = new NoAVS("AVS11");
+    String existingName = "Nom";
+    Allocataire existingAllocataire = new Allocataire(avs, existingName, "oldFirstname");
+
+    String newFirstname = "newFirstname";
+
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(existingAllocataire);
+    Mockito.when(allocataireMapper.updateNameAndFirstname(allocataireId, existingName, newFirstname)).thenReturn(true);
+
+    Allocataire result = allocationService.updateAllocataire(allocataireId, existingName, newFirstname);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getNom()).isEqualTo(existingName);
+    assertThat(result.getPrenom()).isEqualTo(newFirstname);
+    assertThat(result.getNoAVS()).isEqualTo(avs); // Ensure AVS is never changed
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(allocataireMapper, times(1)).updateNameAndFirstname(allocataireId, existingName, newFirstname);
+  }
+
+  @Test
+  void updateAllocataire_GivenNoChangesInNameAndFirstName_ShouldThrowNoChangeToUpdateException() {
+    long allocataireId = 13L;
+    String existingName = "sameNom";
+    String existingFirstname = "sameFirstname";
+    Allocataire existingAllocataire = new Allocataire(new NoAVS("AVS13"), existingName, existingFirstname);
+
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(existingAllocataire);
+
+    NoChangeToUpdateException exception = assertThrows(NoChangeToUpdateException.class,
+            () -> allocationService.updateAllocataire(allocataireId, existingName, existingFirstname));
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(allocataireMapper, never()).updateNameAndFirstname(Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+  }
+
+  @Test
+  void updateAllocataire_GivenNonExistentAllocataire_ShouldThrowAllocataireNotFoundException() {
+    long allocataireId = 14L;
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(null);
+
+    AllocataireNotFoundException exception = assertThrows(AllocataireNotFoundException.class,
+            () -> allocationService.updateAllocataire(allocataireId, "newNom", "newPrenom"));
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(allocataireMapper, never()).updateNameAndFirstname(Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+  }
+
+  @Test
+  void updateAllocataire_GivenNullNameInRequest_ShouldThrowIllegalArgumentException() {
+    long allocataireId = 15L;
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(new Allocataire(new NoAVS("AVS15"), "oldNom", "oldPrenom"));
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> allocationService.updateAllocataire(allocataireId, null, "newPrenom"));
+    Mockito.verify(allocataireMapper, never()).updateNameAndFirstname(Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+  }
+
+  @Test
+  void updateAllocataire_GivenNullFirstnameInRequest_ShouldThrowIllegalArgumentException() {
+    long allocataireId = 15L;
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(new Allocataire(new NoAVS("AVS15"), "oldNom", "oldPrenom"));
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> allocationService.updateAllocataire(allocataireId, "newNom", null));
+    Mockito.verify(allocataireMapper, never()).updateNameAndFirstname(Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+  }
+
+  @Test
+  void updateAllocataire_GivenEmptyNameRequest_ShouldThrowIllegalArgumentException() {
+    long allocataireId = 16L;
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(new Allocataire(new NoAVS("AVS16"), "oldNom", "oldPrenom"));
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> allocationService.updateAllocataire(allocataireId, " ", "newPrenom"));
+    Mockito.verify(allocataireMapper, never()).updateNameAndFirstname(Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+  }
+
+  @Test
+  void updateAllocataire_GivenEmptyFirstnameRequest_ShouldThrowIllegalArgumentException() {
+    long allocataireId = 16L;
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(new Allocataire(new NoAVS("AVS16"), "oldNom", "oldPrenom"));
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> allocationService.updateAllocataire(allocataireId, "newNom", "  "));
+    Mockito.verify(allocataireMapper, never()).updateNameAndFirstname(Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
   }
 
 }
