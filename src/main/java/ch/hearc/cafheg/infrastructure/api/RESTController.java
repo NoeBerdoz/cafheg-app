@@ -84,6 +84,24 @@ public class RESTController {
     return inTransaction(() -> versementService.exportPDFVersements(allocataireId));
   }
 
+  /**
+   * Handles DELETE requests to remove a specific allocataire.
+   * The allocataire is identified by {allocataireId} in the path.
+   *
+   * <p>This operation is conditional:
+   * <ul>
+   * <li>The recipient must exist.
+   * <li>The recipient must not have any associated payments (versements).
+   * </ul>
+   *
+   * <p>Responds with:
+   * <ul>
+   * <li>204 No Content on successful deletion.
+   * <li>404 Not Found if the recipient with the given ID does not exist.
+   * <li>409 Conflict if the recipient cannot be deleted due to existing payments.
+   * <li>500 Internal Server Error for other unexpected issues.
+   * </ul>
+   */
   @DeleteMapping("/allocataires/{allocataireId}")
   public ResponseEntity<Void> deleteAllocataire(@PathVariable long allocataireId) {
     try {
@@ -92,17 +110,38 @@ public class RESTController {
                 allocationService.deleteAllocataire(allocataireId);
                 return null; // Void for supplier
               });
-              return ResponseEntity.noContent().build(); // HTTP 204 No Content
+              return ResponseEntity.noContent().build();
     } catch (AllocataireNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     } catch (AllocataireHasVersementsException e) {
-      return ResponseEntity.status(HttpStatus.CONFLICT).build(); // HTTP 409 Conflict
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
     } catch (RuntimeException e) {
       System.out.println("Erreur lors de la suppression d'un allocataire : " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // HTTP 500 Internal Server Error
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }
 
+/**
+ * Handles PUT requests to update the last name and first name of an allocataire.
+ * The allocataire is identified by {allocataireId} in the path.
+ * The request body should be a JSON object containing 'name' (for the new last name)
+ * and 'firstname' (for the new first name).
+ *
+ * <p>This operation is conditional:
+ * <ul>
+ * <li>The recipient must exist.
+ * <li>At least one of the names (last or first) must be different from the current values.
+ * <li>The AVS number is not modified.
+ * </ul>
+ *
+ * <p>Responds with:
+ * <ul>
+ * <li>200 OK and the updated recipient data on success.
+ * <li>400 Bad Request if the input is invalid (e.g., missing names, no changes detected).
+ * <li>404 Not Found if the recipient with the given ID does not exist.
+ * <li>500 Internal Server Error for other unexpected issues.
+ * </ul>
+ */
   @PutMapping("/allocataires/{allocataireId}")
   public ResponseEntity<?> updateAllocataire(
           @PathVariable long allocataireId,
@@ -123,7 +162,7 @@ public class RESTController {
     } catch (AllocataireNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     } catch (NoChangeToUpdateException | IllegalArgumentException e) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // HTTP 400 Bad request
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     } catch (RuntimeException e) {
       System.out.println("Erreur lors de la mise à jour d'un allocataire : " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
