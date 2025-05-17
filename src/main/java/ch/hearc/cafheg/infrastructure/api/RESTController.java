@@ -5,13 +5,17 @@ import static ch.hearc.cafheg.infrastructure.persistance.Database.inTransaction;
 import ch.hearc.cafheg.business.allocations.Allocataire;
 import ch.hearc.cafheg.business.allocations.Allocation;
 import ch.hearc.cafheg.business.allocations.AllocationService;
+import ch.hearc.cafheg.business.exceptions.AllocataireHasVersementsException;
+import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
 import ch.hearc.cafheg.business.versements.VersementService;
 import ch.hearc.cafheg.infrastructure.pdf.PDFExporter;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import ch.hearc.cafheg.infrastructure.persistance.EnfantMapper;
 import ch.hearc.cafheg.infrastructure.persistance.VersementMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -24,7 +28,7 @@ public class RESTController {
   private final VersementService versementService;
 
   public RESTController() {
-    this.allocationService = new AllocationService(new AllocataireMapper(), new AllocationMapper());
+    this.allocationService = new AllocationService(new AllocataireMapper(), new AllocationMapper(), new VersementMapper());
     this.versementService = new VersementService(new VersementMapper(), new AllocataireMapper(),
         new PDFExporter(new EnfantMapper()));
   }
@@ -77,5 +81,24 @@ public class RESTController {
   @GetMapping(value = "/allocataires/{allocataireId}/versements", produces = MediaType.APPLICATION_PDF_VALUE)
   public byte[] pdfVersements(@PathVariable("allocataireId") int allocataireId) {
     return inTransaction(() -> versementService.exportPDFVersements(allocataireId));
+  }
+
+  @DeleteMapping("/allocataires/{allocataireId}")
+  public ResponseEntity<Void> deleteAllocataire(@PathVariable long allocataireId) {
+    try {
+      inTransaction(
+              () -> {
+                allocationService.deleteAllocataire(allocataireId);
+                return null; // Void for supplier
+              });
+              return ResponseEntity.noContent().build(); // HTTP 204 No Content
+    } catch (AllocataireNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    } catch (AllocataireHasVersementsException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build(); // HTTP 409 Conflict
+    } catch (RuntimeException e) {
+      System.out.println("Erreur lors de la suppression d'un allocataire :" + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // HTTP 500 Internal Server Error
+    }
   }
 }
