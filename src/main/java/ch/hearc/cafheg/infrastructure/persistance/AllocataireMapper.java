@@ -2,6 +2,8 @@ package ch.hearc.cafheg.infrastructure.persistance;
 
 import ch.hearc.cafheg.business.allocations.Allocataire;
 import ch.hearc.cafheg.business.allocations.NoAVS;
+import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -61,11 +63,15 @@ public class AllocataireMapper extends Mapper {
       preparedStatement.setLong(1, id);
       ResultSet resultSet = preparedStatement.executeQuery();
       System.out.println("ResultSet#next");
-      resultSet.next();
-      System.out.println("Allocataire mapping");
-      return new Allocataire(new NoAVS(resultSet.getString(1)),
-          resultSet.getString(2), resultSet.getString(3));
+      if (resultSet.next()) {
+        System.out.println("Allocataire mapping");
+        return new Allocataire(new NoAVS(resultSet.getString(1)),
+                resultSet.getString(2), resultSet.getString(3));
+      } else {
+        throw new AllocataireNotFoundException("Allocataire non trouvé avec l'ID: " + id);
+      }
     } catch (SQLException e) {
+      System.err.println("SQL: Erreur: " + e.getMessage());
       throw new RuntimeException(e);
     }
   }
