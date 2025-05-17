@@ -7,6 +7,7 @@ import ch.hearc.cafheg.business.allocations.Allocation;
 import ch.hearc.cafheg.business.allocations.AllocationService;
 import ch.hearc.cafheg.business.exceptions.AllocataireHasVersementsException;
 import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
+import ch.hearc.cafheg.business.exceptions.NoChangeToUpdateException;
 import ch.hearc.cafheg.business.versements.VersementService;
 import ch.hearc.cafheg.infrastructure.pdf.PDFExporter;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
@@ -97,8 +98,35 @@ public class RESTController {
     } catch (AllocataireHasVersementsException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build(); // HTTP 409 Conflict
     } catch (RuntimeException e) {
-      System.out.println("Erreur lors de la suppression d'un allocataire :" + e.getMessage());
+      System.out.println("Erreur lors de la suppression d'un allocataire : " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // HTTP 500 Internal Server Error
+    }
+  }
+
+  @PutMapping("/allocataires/{allocataireId}")
+  public ResponseEntity<?> updateAllocataire(
+          @PathVariable long allocataireId,
+          @RequestBody Map<String, String> updatePayload
+  ) {
+    try {
+      String newNom = updatePayload.get("name");
+      String newPrenom = updatePayload.get("firstname");
+
+      if (newNom == null || newPrenom == null) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Les champs 'name' et 'firstname' sont requis.");
+      }
+
+      Allocataire updatedAllocataire = inTransaction(
+              () -> allocationService.updateAllocataire(allocataireId, newNom, newPrenom)
+      );
+      return ResponseEntity.ok(updatedAllocataire);
+    } catch (AllocataireNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    } catch (NoChangeToUpdateException | IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // HTTP 400 Bad request
+    } catch (RuntimeException e) {
+      System.out.println("Erreur lors de la mise à jour d'un allocataire : " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }
 }
