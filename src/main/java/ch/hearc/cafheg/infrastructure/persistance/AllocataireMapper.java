@@ -80,7 +80,25 @@ public class AllocataireMapper extends Mapper {
       int rowAffected = preparedStatement.executeUpdate();
       return rowAffected > 0;
     } catch (SQLException e) {
+      System.out.println("SQL: Erreur: " + e.getMessage());
       throw new RuntimeException("Erreur lors de la suppression de l'allocataire avec ID: " + id, e);
+    }
+  }
+
+  public boolean updateNameAndFirstname(long id, String nom, String prenom) {
+    Connection connection = activeJDBCConnection();
+    String query = "UPDATE ALLOCATAIRES SET NOM = ?, PRENOM = ? WHERE NUMERO = ?";
+    try {
+      System.out.println("SQL: Mise à jour d'un allocataire avec ID: " + id);
+      PreparedStatement preparedStatement = connection.prepareStatement(query);
+      preparedStatement.setString(1, nom);
+      preparedStatement.setString(2, prenom);
+      preparedStatement.setLong(3, id);
+      int rowsAffected = preparedStatement.executeUpdate();
+      return rowsAffected > 0;
+    } catch (SQLException e) {
+      System.out.println("SQL: Erreur: " + e.getMessage());
+      throw new RuntimeException("Erreur lors de la mise à jour de l'allocataire ID: " + id, e);
     }
   }
 }
