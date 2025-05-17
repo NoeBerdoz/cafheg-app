@@ -60,6 +60,17 @@ public class AllocationService {
     return salaireP1.doubleValue() > salaireP2.doubleValue() ? PARENT_1 : PARENT_2;
   }
 
+  /**
+   * Deletes an allocataire after verifying business rules.
+   * <p>
+   * The allocataire must exist and must not have any associated versements.
+   *
+   * @param allocataireId the ID of the allocataire to delete.
+   * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
+   * @throws AllocataireHasVersementsException if the allocataire has existing versements.
+   * @throws RuntimeException if the deletion fails in the database for other reasons
+   * after initial checks have passed.
+   */
   public void deleteAllocataire(long allocataireId) {
     System.out.println("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
 
@@ -80,6 +91,21 @@ public class AllocationService {
     System.out.println("Service: Allocataire avec ID " + allocataireId + " supprimé avec succès.");
   }
 
+  /**
+   * Updates the last name and first name of an existing allocataire.
+   * <p>
+   * The update is performed only if the provided new last name or new first name
+   * is different from the existing ones. The AVS number remains unchanged.
+   *
+   * @param allocataireId   the ID of the allocataire to update.
+   * @param newNom          the new last name for the allocataire; cannot be null or empty.
+   * @param newPrenom       the new first name for the allocataire; cannot be null or empty.
+   * @return the updated {@link Allocataire} object.
+   * @throws IllegalArgumentException if {@code newNom} or {@code newPrenom} is null or empty.
+   * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
+   * @throws NoChangeToUpdateException if neither the last name nor the first name has changed.
+   * @throws RuntimeException if the update fails in the database for other reasons.
+   */
   public Allocataire updateAllocataire(long allocataireId, String newNom, String newPrenom) {
     System.out.println("Service: Tentative de mise à jour du nom de l'allocataire avec ID: " + allocataireId);
 

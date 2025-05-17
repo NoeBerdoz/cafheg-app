@@ -76,6 +76,14 @@ public class AllocataireMapper extends Mapper {
     }
   }
 
+  /**
+   * Deletes an allocataire from the database based on its ID.
+   *
+   * @param id The id of the allocataire to be deleted.
+   * @return {@code true} if the recipient was successfully deleted
+   * {@code false} if no recipient was found with that ID
+   * @throws RuntimeException if a SQL error occurs during the delete operation.
+   */
   public boolean deleteById(long id) {
     Connection connection = activeJDBCConnection();
     String query = "DELETE FROM ALLOCATAIRES WHERE NUMERO = ?";
@@ -91,6 +99,15 @@ public class AllocataireMapper extends Mapper {
     }
   }
 
+  /**
+   * Updates the last name and first name of an allocataire.
+   *
+   * @param id the ID of the recipient to update.
+   * @param nom  the new last name for the recipient.
+   * @param prenom the new first name for the recipient.
+   * @return {@code true} if the allocataire was updated, {@code false} otherwise.
+   * @throws RuntimeException if a database access error occurs.
+   */
   public boolean updateNameAndFirstname(long id, String nom, String prenom) {
     Connection connection = activeJDBCConnection();
     String query = "UPDATE ALLOCATAIRES SET NOM = ?, PRENOM = ? WHERE NUMERO = ?";
