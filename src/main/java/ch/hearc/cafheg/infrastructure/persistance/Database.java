@@ -38,7 +38,7 @@ public class Database {
       System.out.println("inTransaction#getConnection");
       connection.set(dataSource.getConnection());
       return inTransaction.get();
-    } catch (Exception e) {
+    } catch (SQLException e) {
       throw new RuntimeException(e);
     } finally {
       try {
