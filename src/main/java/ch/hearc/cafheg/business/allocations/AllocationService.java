@@ -1,8 +1,13 @@
 package ch.hearc.cafheg.business.allocations;
 
+import ch.hearc.cafheg.business.exceptions.AllocataireHasVersementsException;
+import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
+import ch.hearc.cafheg.infrastructure.persistance.VersementMapper;
+
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
@@ -13,12 +18,15 @@ public class AllocationService {
 
   private final AllocataireMapper allocataireMapper;
   private final AllocationMapper allocationMapper;
+  private final VersementMapper versementMapper;
 
   public AllocationService(
       AllocataireMapper allocataireMapper,
-      AllocationMapper allocationMapper) {
+      AllocationMapper allocationMapper,
+      VersementMapper versementMapper) {
     this.allocataireMapper = allocataireMapper;
     this.allocationMapper = allocationMapper;
+    this.versementMapper = versementMapper;
   }
 
   public List<Allocataire> findAllAllocataires(String likeNom) {
@@ -50,5 +58,25 @@ public class AllocationService {
     }
 
     return salaireP1.doubleValue() > salaireP2.doubleValue() ? PARENT_1 : PARENT_2;
+  }
+
+  public void deleteAllocataire(long allocataireId) {
+    System.out.println("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
+
+    Allocataire allocataire = allocataireMapper.findById(allocataireId);
+    if (allocataire == null) {
+      throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + " n'a pas été trouvé.");
+    }
+
+    if (versementMapper.countVersementsByAllocataireId(allocataireId) > 0) {
+      throw new AllocataireHasVersementsException("L'allocataire avec ID: " + allocataireId + " a des versements.");
+    }
+
+    boolean deleted = allocataireMapper.deleteById(allocataireId);
+    if(!deleted) {
+      throw new RuntimeException("La suppression de l'allocataire avec ID: " + allocataireId + " a échoué en base de données bien qu'il ait été trouvé initialement et n'ait pas de versements.");
+    }
+
+    System.out.println("Service: Allocataire avec ID " + allocataireId + " supprimé avec succès.");
   }
 }

@@ -69,4 +69,18 @@ public class AllocataireMapper extends Mapper {
       throw new RuntimeException(e);
     }
   }
+
+  public boolean deleteById(long id) {
+    Connection connection = activeJDBCConnection();
+    String query = "DELETE FROM ALLOCATAIRES WHERE NUMERO = ?";
+    try {
+      System.out.println("SQL: Suppression d'un allocataire avec ID: " + id);
+      PreparedStatement preparedStatement = connection.prepareStatement(query);
+      preparedStatement.setLong(1, id);
+      int rowAffected = preparedStatement.executeUpdate();
+      return rowAffected > 0;
+    } catch (SQLException e) {
+      throw new RuntimeException("Erreur lors de la suppression de l'allocataire avec ID: " + id, e);
+    }
+  }
 }

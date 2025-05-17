@@ -99,4 +99,21 @@ public class VersementMapper extends Mapper {
       throw new RuntimeException(e);
     }
   }
+
+  public long countVersementsByAllocataireId(long allocataireId) {
+    Connection connection = activeJDBCConnection();
+    String query = "SELECT COUNT(*) FROM VERSEMENTS WHERE FK_ALLOCATAIRES = ?";
+    try {
+      System.out.println("SQL: Comptage des versements pour l'allocataire ID: " + allocataireId);
+      PreparedStatement preparedStatement = connection.prepareStatement(query);
+      preparedStatement.setLong(1, allocataireId);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        return resultSet.getLong(1);
+      }
+      return 0L;
+    } catch (SQLException e) {
+      throw new RuntimeException("Erreur lors du comptage des versements pour l'allocataire ID: " + allocataireId, e);
+    }
+  }
 }
