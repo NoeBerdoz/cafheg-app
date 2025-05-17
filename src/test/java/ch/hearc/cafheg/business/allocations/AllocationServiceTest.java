@@ -2,8 +2,12 @@ package ch.hearc.cafheg.business.allocations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 
 import ch.hearc.cafheg.business.common.Montant;
+import ch.hearc.cafheg.business.exceptions.AllocataireHasVersementsException;
+import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import java.math.BigDecimal;
@@ -11,6 +15,8 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import ch.hearc.cafheg.infrastructure.persistance.VersementMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,13 +27,15 @@ class AllocationServiceTest {
 
   private AllocataireMapper allocataireMapper;
   private AllocationMapper allocationMapper;
+  private VersementMapper versementMapper;
 
   @BeforeEach
   void setUp() {
     allocataireMapper = Mockito.mock(AllocataireMapper.class);
     allocationMapper = Mockito.mock(AllocationMapper.class);
+    versementMapper = Mockito.mock(VersementMapper.class);
 
-    allocationService = new AllocationService(allocataireMapper, allocationMapper);
+    allocationService = new AllocationService(allocataireMapper, allocationMapper, versementMapper);
   }
 
   @Test
@@ -68,6 +76,58 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getCanton()).isEqualTo(Canton.FR),
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
+  }
+
+  @Test
+  void deleteAllocataire_GivenAllocataireWithoutVersements_ShouldDelete() {
+    long allocataireId = 1L;
+    // Mock that the allocataire exists
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(new Allocataire(new NoAVS("AVS1"), "Nom", "Prenom"));
+    // Mock that the allocataire has no versements
+    Mockito.when(versementMapper.countVersementsByAllocataireId(allocataireId)).thenReturn(0L);
+    // Mock deletion in mapper
+    Mockito.when(allocataireMapper.deleteById(allocataireId)).thenReturn(true);
+
+    assertDoesNotThrow(() -> allocationService.deleteAllocataire(allocataireId));
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(versementMapper, times(1)).countVersementsByAllocataireId(allocataireId);
+    Mockito.verify(allocataireMapper, times(1)).deleteById(allocataireId);
+  }
+
+  @Test
+  void deleteAllocataire_GivenAllocataireWithVersements_ShouldTrowAllocataireHasVersementsException() {
+    long allocataireId = 2L;
+    // Mock that the allocataire exists
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(new Allocataire(new NoAVS("AVS2"), "Nom2", "Prenom2"));
+    // Mock that the allocataire has 10 versements
+    Mockito.when(versementMapper.countVersementsByAllocataireId(allocataireId)).thenReturn(10L);
+
+    // Ensure that deleteAllocataire returns AllocataireHasVersementsException error
+    assertThrows(
+            AllocataireHasVersementsException.class,
+            () -> allocationService.deleteAllocataire(allocataireId)
+    );
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(versementMapper, times(1)).countVersementsByAllocataireId(allocataireId);
+    Mockito.verify(allocataireMapper, never()).deleteById(allocataireId);
+  }
+
+  @Test
+  void deleteAllocataire_GivenNonExistentAllocataire_ShouldThrowAllocataireNotFoundException() {
+    long allocataireId = 3L;
+    // Mock a non existent allocataire
+    Mockito.when(allocataireMapper.findById(allocataireId)).thenReturn(null);
+
+    assertThrows(
+            AllocataireNotFoundException.class,
+            () -> allocationService.deleteAllocataire(allocataireId)
+    );
+
+    Mockito.verify(allocataireMapper, times(1)).findById(allocataireId);
+    Mockito.verify(versementMapper, never()).countVersementsByAllocataireId(allocataireId);
+    Mockito.verify(allocataireMapper, never()).deleteById(allocataireId);
   }
 
 }
