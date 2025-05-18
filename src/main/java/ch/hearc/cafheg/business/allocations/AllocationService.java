@@ -7,14 +7,12 @@ import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import ch.hearc.cafheg.infrastructure.persistance.VersementMapper;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 public class AllocationService {
 
-  private static final String PARENT_1 = "Parent1";
-  private static final String PARENT_2 = "Parent2";
+    private static final String PARENT_1 = "Parent1";
+    private static final String PARENT_2 = "Parent2";
 
   private final AllocataireMapper allocataireMapper;
   private final AllocationMapper allocationMapper;
@@ -38,102 +36,152 @@ public class AllocationService {
     return allocationMapper.findAll();
   }
 
-  public String getParentDroitAllocation(Map<String, Object> parameters) {
-    System.out.println("Déterminer quel parent a le droit aux allocations");
-    String eR = (String)parameters.getOrDefault("enfantResidence", "");
-    Boolean p1AL = (Boolean)parameters.getOrDefault("parent1ActiviteLucrative", false);
-    String p1Residence = (String)parameters.getOrDefault("parent1Residence", "");
-    Boolean p2AL = (Boolean)parameters.getOrDefault("parent2ActiviteLucrative", false);
-    String p2Residence = (String)parameters.getOrDefault("parent2Residence", "");
-    Boolean pEnsemble = (Boolean)parameters.getOrDefault("parentsEnsemble", false);
-    Number salaireP1 = (Number) parameters.getOrDefault("parent1Salaire", BigDecimal.ZERO);
-    Number salaireP2 = (Number) parameters.getOrDefault("parent2Salaire", BigDecimal.ZERO);
+    public String getParentDroitAllocation(ParentAllocRequest request) {
+        System.out.println("Déterminer le parent ayant droit à l'allocation");
 
-    if(p1AL && !p2AL) {
-      return PARENT_1;
+        if (hasOnlyParent1Activity(request)) return PARENT_1;
+        if (hasOnlyParent2Activity(request)) return PARENT_2;
+
+        if (hasOnlyParent1Autority(request)) return PARENT_1;
+        if (hasOnlyParent2Autority(request)) return PARENT_2;
+
+        if (!request.isParentsEnsemble()) {
+            if (parent1LivesWithChild(request)) return PARENT_1;
+            if (parent2LivesWithChild(request)) return PARENT_2;
+        }
+
+        if (worksOnlyParent1InChildCanton(request)) return PARENT_1;
+        if (worksOnlyParent2InChildCanton(request)) return PARENT_2;
+
+        return compareSalaryAccordingToIndependence(request);
     }
 
-    if(p2AL && !p1AL) {
-      return PARENT_2;
+    // -------Méthodes privées pour vérifier les conditions
+
+    // Parents avec activité lucrative
+    private boolean hasOnlyParent1Activity(ParentAllocRequest r) {
+        return r.isParent1ActiviteLucrative() && !r.isParent2ActiviteLucrative();
     }
 
-    return salaireP1.doubleValue() > salaireP2.doubleValue() ? PARENT_1 : PARENT_2;
-  }
-
-  /**
-   * Deletes an allocataire after verifying business rules.
-   * <p>
-   * The allocataire must exist and must not have any associated versements.
-   *
-   * @param allocataireId the ID of the allocataire to delete.
-   * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
-   * @throws AllocataireHasVersementsException if the allocataire has existing versements.
-   * @throws RuntimeException if the deletion fails in the database for other reasons
-   * after initial checks have passed.
-   */
-  public void deleteAllocataire(long allocataireId) {
-    System.out.println("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
-
-    Allocataire allocataire = allocataireMapper.findById(allocataireId);
-    if (allocataire == null) {
-      throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + " n'a pas été trouvé.");
+    private boolean hasOnlyParent2Activity(ParentAllocRequest r) {
+        return r.isParent2ActiviteLucrative() && !r.isParent1ActiviteLucrative();
     }
 
-    if (versementMapper.countVersementsByAllocataireId(allocataireId) > 0) {
-      throw new AllocataireHasVersementsException("L'allocataire avec ID: " + allocataireId + " a des versements.");
+    // Autorité parentale
+    private boolean hasOnlyParent1Autority(ParentAllocRequest r) {
+        return r.isParent1AutoriteParentale() && !r.isParent2AutoriteParentale();
     }
 
-    boolean deleted = allocataireMapper.deleteById(allocataireId);
-    if(!deleted) {
-      throw new RuntimeException("La suppression de l'allocataire avec ID: " + allocataireId + " a échoué en base de données bien qu'il ait été trouvé initialement et n'ait pas de versements.");
+    private boolean hasOnlyParent2Autority(ParentAllocRequest r) {
+        return r.isParent2AutoriteParentale() && !r.isParent1AutoriteParentale();
     }
 
-    System.out.println("Service: Allocataire avec ID " + allocataireId + " supprimé avec succès.");
-  }
-
-  /**
-   * Updates the last name and first name of an existing allocataire.
-   * <p>
-   * The update is performed only if the provided new last name or new first name
-   * is different from the existing ones. The AVS number remains unchanged.
-   *
-   * @param allocataireId   the ID of the allocataire to update.
-   * @param newNom          the new last name for the allocataire; cannot be null or empty.
-   * @param newPrenom       the new first name for the allocataire; cannot be null or empty.
-   * @return the updated {@link Allocataire} object.
-   * @throws IllegalArgumentException if {@code newNom} or {@code newPrenom} is null or empty.
-   * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
-   * @throws NoChangeToUpdateException if neither the last name nor the first name has changed.
-   * @throws RuntimeException if the update fails in the database for other reasons.
-   */
-  public Allocataire updateAllocataire(long allocataireId, String newNom, String newPrenom) {
-    System.out.println("Service: Tentative de mise à jour du nom de l'allocataire avec ID: " + allocataireId);
-
-    // Validate input
-    if (newNom == null || newNom.trim().isEmpty() || newPrenom == null || newPrenom.trim().isEmpty()) {
-      throw new IllegalArgumentException("Le nom et le prénom de l'allocataire ne peuvent pas être vides.");
+    // Parents qui vivent séparément
+    private boolean parent1LivesWithChild(ParentAllocRequest r) {
+        return r.getParent1Residence().equalsIgnoreCase(r.getEnfantResidence());
     }
 
-    Allocataire existingAllocataire = allocataireMapper.findById(allocataireId);
-    if (existingAllocataire == null) {
-      throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + "n'a pas été trouvé");
+    private boolean parent2LivesWithChild(ParentAllocRequest r) {
+        return r.getParent2Residence().equalsIgnoreCase(r.getEnfantResidence());
     }
 
-    boolean nameChanged = !existingAllocataire.getNom().equals(newNom.trim());
-    boolean firstnameChanged = !existingAllocataire.getPrenom().equals(newPrenom.trim());
-
-    // Update should be done only if a changed is detected
-    if (!nameChanged && !firstnameChanged) {
-      throw new NoChangeToUpdateException("Aucune modification détectée pour l'allocataire ID: " + allocataireId);
+    // Parents qui travaillent dans le canton de l'enfant
+    private boolean worksOnlyParent1InChildCanton(ParentAllocRequest r) {
+        return r.getParent1CantonTravail().equalsIgnoreCase(r.getEnfantResidence()) &&
+                !r.getParent2CantonTravail().equalsIgnoreCase(r.getEnfantResidence());
     }
 
-    boolean updatedInDb = allocataireMapper.updateNameAndFirstname(allocataireId, newNom.trim(), newPrenom.trim());
-
-    if (!updatedInDb) {
-      throw new RuntimeException("La mise à jour de l'allocataire ID: " + allocataireId + " a échoué en base de données.");
+    private boolean worksOnlyParent2InChildCanton(ParentAllocRequest r) {
+        return r.getParent2CantonTravail().equalsIgnoreCase(r.getEnfantResidence()) &&
+                !r.getParent1CantonTravail().equalsIgnoreCase(r.getEnfantResidence());
     }
 
-    System.out.println("Service: Allocataire avec ID: " + allocataireId + " a été mise à jour avec succès");
-    return new Allocataire(existingAllocataire.getNoAVS(), newNom.trim(), newPrenom.trim());
-  }
+    // Comparaison des salaires
+    private String compareSalaryAccordingToIndependence(ParentAllocRequest r) {
+        boolean p1Indep = r.isParent1EstIndependant();
+        boolean p2Indep = r.isParent2EstIndependant();
+
+        if (!p1Indep && p2Indep) return PARENT_1;
+        if (p1Indep && !p2Indep) return PARENT_2;
+
+        return r.getParent1Salaire().compareTo(r.getParent2Salaire()) > 0 ? PARENT_1 : PARENT_2;
+    }
+
+    /**
+     * Deletes an allocataire after verifying business rules.
+     * <p>
+     * The allocataire must exist and must not have any associated versements.
+     *
+     * @param allocataireId the ID of the allocataire to delete.
+     * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
+     * @throws AllocataireHasVersementsException if the allocataire has existing versements.
+     * @throws RuntimeException if the deletion fails in the database for other reasons
+     * after initial checks have passed.
+     */
+    public void deleteAllocataire(long allocataireId) {
+        System.out.println("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
+
+        Allocataire allocataire = allocataireMapper.findById(allocataireId);
+        if (allocataire == null) {
+            throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + " n'a pas été trouvé.");
+        }
+
+        if (versementMapper.countVersementsByAllocataireId(allocataireId) > 0) {
+            throw new AllocataireHasVersementsException("L'allocataire avec ID: " + allocataireId + " a des versements.");
+        }
+
+        boolean deleted = allocataireMapper.deleteById(allocataireId);
+        if(!deleted) {
+            throw new RuntimeException("La suppression de l'allocataire avec ID: " + allocataireId + " a échoué en base de données bien qu'il ait été trouvé initialement et n'ait pas de versements.");
+        }
+
+        System.out.println("Service: Allocataire avec ID " + allocataireId + " supprimé avec succès.");
+    }
+
+    /**
+     * Updates the last name and first name of an existing allocataire.
+     * <p>
+     * The update is performed only if the provided new last name or new first name
+     * is different from the existing ones. The AVS number remains unchanged.
+     *
+     * @param allocataireId   the ID of the allocataire to update.
+     * @param newNom          the new last name for the allocataire; cannot be null or empty.
+     * @param newPrenom       the new first name for the allocataire; cannot be null or empty.
+     * @return the updated {@link Allocataire} object.
+     * @throws IllegalArgumentException if {@code newNom} or {@code newPrenom} is null or empty.
+     * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
+     * @throws NoChangeToUpdateException if neither the last name nor the first name has changed.
+     * @throws RuntimeException if the update fails in the database for other reasons.
+     */
+    public Allocataire updateAllocataire(long allocataireId, String newNom, String newPrenom) {
+        System.out.println("Service: Tentative de mise à jour du nom de l'allocataire avec ID: " + allocataireId);
+
+        // Validate input
+        if (newNom == null || newNom.trim().isEmpty() || newPrenom == null || newPrenom.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le nom et le prénom de l'allocataire ne peuvent pas être vides.");
+        }
+
+        Allocataire existingAllocataire = allocataireMapper.findById(allocataireId);
+        if (existingAllocataire == null) {
+            throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + "n'a pas été trouvé");
+        }
+
+        boolean nameChanged = !existingAllocataire.getNom().equals(newNom.trim());
+        boolean firstnameChanged = !existingAllocataire.getPrenom().equals(newPrenom.trim());
+
+        // Update should be done only if a changed is detected
+        if (!nameChanged && !firstnameChanged) {
+            throw new NoChangeToUpdateException("Aucune modification détectée pour l'allocataire ID: " + allocataireId);
+        }
+
+        boolean updatedInDb = allocataireMapper.updateNameAndFirstname(allocataireId, newNom.trim(), newPrenom.trim());
+
+        if (!updatedInDb) {
+            throw new RuntimeException("La mise à jour de l'allocataire ID: " + allocataireId + " a échoué en base de données.");
+        }
+
+        System.out.println("Service: Allocataire avec ID: " + allocataireId + " a été mise à jour avec succès");
+        return new Allocataire(existingAllocataire.getNoAVS(), newNom.trim(), newPrenom.trim());
+    }
 }
+

@@ -8,6 +8,7 @@ import ch.hearc.cafheg.business.allocations.AllocationService;
 import ch.hearc.cafheg.business.exceptions.AllocataireHasVersementsException;
 import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
 import ch.hearc.cafheg.business.exceptions.NoChangeToUpdateException;
+import ch.hearc.cafheg.business.allocations.ParentAllocRequest;
 import ch.hearc.cafheg.business.versements.VersementService;
 import ch.hearc.cafheg.infrastructure.pdf.PDFExporter;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
@@ -34,50 +35,57 @@ public class RESTController {
         new PDFExporter(new EnfantMapper()));
   }
 
-  /*
-  // Headers de la requête HTTP doit contenir "Content-Type: application/json"
-  // BODY de la requête HTTP à transmettre afin de tester le endpoint
-  {
-      "enfantResidence" : "Neuchâtel",
-      "parent1Residence" : "Neuchâtel",
-      "parent2Residence" : "Bienne",
-      "parent1ActiviteLucrative" : true,
-      "parent2ActiviteLucrative" : true,
-      "parent1Salaire" : 2500,
-      "parent2Salaire" : 3000
-  }
-   */
-  @PostMapping("/droits/quel-parent")
-  public String getParentDroitAllocation(@RequestBody Map<String, Object> params) {
-    return inTransaction(() -> allocationService.getParentDroitAllocation(params));
-  }
+    /*
+    // Headers de la requête HTTP doit contenir "Content-Type: application/json"
+    // BODY de la requête HTTP à transmettre afin de tester le endpoint
+    {
+        "enfantResidence": "Neuchâtel",
+        "parent1Residence": "Neuchâtel",
+        "parent2Residence": "Bienne",
+        "parent1ActiviteLucrative": true,
+        "parent2ActiviteLucrative": true,
+        "parent1Salaire": 3000,
+        "parent2Salaire": 4000,
+        "parent1AutoriteParentale": true,
+        "parent2AutoriteParentale": false,
+        "parentsEnsemble": false,
+        "parent1EstIndependant": true,
+        "parent2EstIndependant": false,
+        "parent1CantonTravail": "Neuchâtel",
+        "parent2CantonTravail": "Neuchâtel"
+    }
+     */
+    @PostMapping("/droits/quel-parent")
+    public String getParentDroitAllocation(@RequestBody ParentAllocRequest request) {
+        return inTransaction(() -> allocationService.getParentDroitAllocation(request));
+    }
 
-  @GetMapping("/allocataires")
-  public List<Allocataire> allocataires(
-      @RequestParam(value = "startsWith", required = false) String start) {
-    return inTransaction(() -> allocationService.findAllAllocataires(start));
-  }
+    @GetMapping("/allocataires")
+    public List<Allocataire> allocataires(
+            @RequestParam(value = "startsWith", required = false) String start) {
+        return inTransaction(() -> allocationService.findAllAllocataires(start));
+    }
 
-  @GetMapping("/allocations")
-  public List<Allocation> allocations() {
-    return inTransaction(allocationService::findAllocationsActuelles);
-  }
+    @GetMapping("/allocations")
+    public List<Allocation> allocations() {
+        return inTransaction(allocationService::findAllocationsActuelles);
+    }
 
-  @GetMapping("/allocations/{year}/somme")
-  public BigDecimal sommeAs(@PathVariable("year") int year) {
-    return inTransaction(() -> versementService.findSommeAllocationParAnnee(year).getValue());
-  }
+    @GetMapping("/allocations/{year}/somme")
+    public BigDecimal sommeAs(@PathVariable("year") int year) {
+        return inTransaction(() -> versementService.findSommeAllocationParAnnee(year).getValue());
+    }
 
-  @GetMapping("/allocations-naissances/{year}/somme")
-  public BigDecimal sommeAns(@PathVariable("year") int year) {
-    return inTransaction(
-        () -> versementService.findSommeAllocationNaissanceParAnnee(year).getValue());
-  }
+    @GetMapping("/allocations-naissances/{year}/somme")
+    public BigDecimal sommeAns(@PathVariable("year") int year) {
+        return inTransaction(
+                () -> versementService.findSommeAllocationNaissanceParAnnee(year).getValue());
+    }
 
-  @GetMapping(value = "/allocataires/{allocataireId}/allocations", produces = MediaType.APPLICATION_PDF_VALUE)
-  public byte[] pdfAllocations(@PathVariable("allocataireId") int allocataireId) {
-    return inTransaction(() -> versementService.exportPDFAllocataire(allocataireId));
-  }
+    @GetMapping(value = "/allocataires/{allocataireId}/allocations", produces = MediaType.APPLICATION_PDF_VALUE)
+    public byte[] pdfAllocations(@PathVariable("allocataireId") int allocataireId) {
+        return inTransaction(() -> versementService.exportPDFAllocataire(allocataireId));
+    }
 
   @GetMapping(value = "/allocataires/{allocataireId}/versements", produces = MediaType.APPLICATION_PDF_VALUE)
   public byte[] pdfVersements(@PathVariable("allocataireId") int allocataireId) {
