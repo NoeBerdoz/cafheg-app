@@ -30,6 +30,18 @@ public class AllocationService {
     return allocationMapper.findAll();
   }
 
+    /**
+     * Méthode qui détermine quel parent a le droit aux allocations
+     * @param parameters Paramètres de la requête
+     * @return Le parent qui a le droit aux allocations
+      1 seul parent actif (Soit P1, soit P2)
+      Les 2 parents sont actifs --> On compare les salaires
+      Les 2 parents sont actifs et ont le même salaire --> On retourne P2 (car pas strictement plus grand que P1)
+      Les 2 parents sont inactifs --> On retourne P2 (car pas strictement plus grand que P1)
+      La map fournie en paramètre ne contient pas les valeurs nécessaires
+        --> getOrDefault renvoie la valeur par défaut et donc P2 doit être retourné
+      La résidence de l'enfant et des parents n'a aucun impact sur le droit aux allocations
+    */
   public String getParentDroitAllocation(Map<String, Object> parameters) {
     System.out.println("Déterminer quel parent a le droit aux allocations");
     String eR = (String)parameters.getOrDefault("enfantResidence", "");

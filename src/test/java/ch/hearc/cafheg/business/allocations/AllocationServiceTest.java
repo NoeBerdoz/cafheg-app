@@ -8,9 +8,7 @@ import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -68,6 +66,93 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getCanton()).isEqualTo(Canton.FR),
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
+  }
+
+  @Test
+  void givenParent1ActiveAndParent2Inactive_ShouldReturnParent1() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("parent1ActiviteLucrative", true);
+    parameters.put("parent2ActiviteLucrative", false);
+    String result = allocationService.getParentDroitAllocation(parameters);
+    assertThat(result).isEqualTo("Parent1");
+  }
+
+  @Test
+  void givenParent1InactiveAndParent2Active_ShouldReturnParent2() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("parent1ActiviteLucrative", false);
+    parameters.put("parent2ActiviteLucrative", true);
+    String result = allocationService.getParentDroitAllocation(parameters);
+    assertThat(result).isEqualTo("Parent2");
+  }
+
+  @Test
+  void givenBothParentsActive_ShouldReturnParentWithHigherSalary() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("parent1ActiviteLucrative", true);
+    parameters.put("parent2ActiviteLucrative", true);
+    parameters.put("parent1Salaire", new BigDecimal(5000));
+    parameters.put("parent2Salaire", new BigDecimal(4000));
+    String result = allocationService.getParentDroitAllocation(parameters);
+    assertThat(result).isEqualTo("Parent1");
+  }
+
+  @Test
+    void givenBothParentsActiveWithEqualSalary_ShouldReturnParent2() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("parent1ActiviteLucrative", true);
+        parameters.put("parent2ActiviteLucrative", true);
+        parameters.put("parent1Salaire", new BigDecimal(4000));
+        parameters.put("parent2Salaire", new BigDecimal(4000));
+        String result = allocationService.getParentDroitAllocation(parameters);
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+  @Test
+  void givenBothParentsInactive_ShouldReturnParent2() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("parent1ActiviteLucrative", false);
+    parameters.put("parent2ActiviteLucrative", false);
+    String result = allocationService.getParentDroitAllocation(parameters);
+    assertThat(result).isEqualTo("Parent2");
+  }
+
+  @Test
+  void givenBothParentsActiveWithMissingSalary_ShouldReturnParent2() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("parent1ActiviteLucrative", true);
+    parameters.put("parent2ActiviteLucrative", true);
+    String result = allocationService.getParentDroitAllocation(parameters);
+    assertThat(result).isEqualTo("Parent2");
+  }
+
+  @Test
+  void givenIncorrectSalaryParameters_ShouldReturnParent2() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("parent1ActiviteLucrative", false);
+    parameters.put("parent2ActiviteLucrative", false);
+    parameters.put("parent1Salaire", "Vanessa");
+    parameters.put("parent2Salaire", "David");
+
+    assertThrows(ClassCastException.class, () ->
+      allocationService.getParentDroitAllocation(parameters)
+    );
+    // Avec des paramètres non valides, on ne peut pas tester le résultat sans la ligne ci-dessus
+    // La méthode getParentDroitAllocation va lever une ClassCastException
+    // String result = allocationService.getParentDroitAllocation(parameters);
+    // assertThat(result).isEqualTo("Parent2");
+  }
+
+  @Test
+  void givenMissingSalaryParameterForParent2_ShouldReturnParent1() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("parent1ActiviteLucrative", true);
+    parameters.put("parent2ActiviteLucrative", true);
+    parameters.put("parent1Salaire", new BigDecimal("4000"));
+    // parameters.put("parent2Salaire", new BigDecimal("3000")); --> Missing parameter
+
+    String result = allocationService.getParentDroitAllocation(parameters);
+    assertThat(result).isEqualTo("Parent1");
   }
 
 }
