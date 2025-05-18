@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test;
 
 class CantonTest {
 
-  @Test
-  void fromValue_GivenFR_ShouldBeFR() {
-    assertThat(Canton.fromValue("FR")).isEqualTo(Canton.FR);
-  }
+    @Test
+    void fromValue_GivenFR_ShouldBeFR() {
+        assertThat(Canton.fromValue("FR")).isEqualTo(Canton.FR);
+    }
 
-  @Test
-  void fromValue_GivenMM_ShouldBeNull() {
-    assertThat(Canton.fromValue("MM")).isNull();
-  }
+    @Test
+    void fromValue_GivenMM_ShouldBeNull() {
+        assertThat(Canton.fromValue("MM")).isNull();
+    }
 
 }

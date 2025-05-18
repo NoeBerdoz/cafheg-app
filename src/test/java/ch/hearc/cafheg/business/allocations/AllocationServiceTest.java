@@ -23,21 +23,21 @@ import org.mockito.Mockito;
 
 class AllocationServiceTest {
 
-  private AllocationService allocationService;
+    private AllocationService allocationService;
 
-  private AllocataireMapper allocataireMapper;
-  private AllocationMapper allocationMapper;
-  private VersementMapper versementMapper;
+    private AllocataireMapper allocataireMapper;
+    private AllocationMapper allocationMapper;
+    private VersementMapper versementMapper;
     private ParentAllocRequest request;
 
-  @BeforeEach
-  void setUp() {
-    allocataireMapper = Mockito.mock(AllocataireMapper.class);
-    allocationMapper = Mockito.mock(AllocationMapper.class);
-    versementMapper = Mockito.mock(VersementMapper.class);
+    @BeforeEach
+    void setUp() {
+        allocataireMapper = Mockito.mock(AllocataireMapper.class);
+        allocationMapper = Mockito.mock(AllocationMapper.class);
+        versementMapper = Mockito.mock(VersementMapper.class);
 
-    allocationService = new AllocationService(allocataireMapper, allocationMapper, versementMapper);
-  }
+        allocationService = new AllocationService(allocataireMapper, allocationMapper, versementMapper);
+    }
 
     @Test
     void findAllAllocataires_GivenEmptyAllocataires_ShouldBeEmpty() {
@@ -80,7 +80,8 @@ class AllocationServiceTest {
     }
     ///////////////////////////
     // TESTS FROM EXERCISE 1
-    ///////////////////////////
+
+    /// ////////////////////////
     @Test
     void getParenDroitAllocation_GivenParent1HasActivityAndParent2DoesNot_ShouldReturnParent1() {
         request = new ParentAllocRequest(
@@ -92,7 +93,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void getParentDroitAllocation_GivenParent2HasActivityAndParent1DoesNot_ShouldReturnParent2 () {
+    void getParentDroitAllocation_GivenParent2HasActivityAndParent1DoesNot_ShouldReturnParent2() {
         request = new ParentAllocRequest(
                 "Neuchâtel", false, "Neuchâtel", true, "Bienne", true,
                 BigDecimal.ZERO, BigDecimal.ZERO, true, true, false, false, "Neuchâtel", "Neuchâtel"
@@ -102,7 +103,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void getParentDroitAllocation_GivenBothParentsHaveActivityAndParent1HasHigherSalary_ShouldReturnParent1 () {
+    void getParentDroitAllocation_GivenBothParentsHaveActivityAndParent1HasHigherSalary_ShouldReturnParent1() {
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
                 new BigDecimal(3500), new BigDecimal(3000), true, true, false, false, "Neuchâtel", "Neuchâtel"
@@ -112,7 +113,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void getParentDroitAllocation_GivenBothParentsHaveActivityAndParent2HasHigherSalary_ShouldReturnParent2 () {
+    void getParentDroitAllocation_GivenBothParentsHaveActivityAndParent2HasHigherSalary_ShouldReturnParent2() {
 
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
@@ -202,6 +203,7 @@ class AllocationServiceTest {
         String result = allocationService.getParentDroitAllocation(request);
         assertThat(result).isEqualTo("Parent2");
     }
+
     @Test
     void getParentDroitAllocation_GivenParentsSeparatedAndOnlyParent2LivesWithChild_ShouldReturnParent2() {
         request = new ParentAllocRequest(
@@ -216,7 +218,8 @@ class AllocationServiceTest {
 
     ///////////////////////////
     // TESTS FROM EXERCISE 2
-    ///////////////////////////
+
+    /// ////////////////////////
 
     @Test
     void deleteAllocataire_GivenAllocataireWithoutVersements_ShouldDelete() {

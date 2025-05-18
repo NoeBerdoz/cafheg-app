@@ -5,19 +5,19 @@ import java.util.Objects;
 
 public class Montant {
 
-  public final BigDecimal value;
+    public final BigDecimal value;
 
-  public Montant(BigDecimal value) {
-    this.value = value;
-  }
+    public Montant(BigDecimal value) {
+        this.value = value;
+    }
 
-  public BigDecimal getValue() {
-    return value;
-  }
+    public BigDecimal getValue() {
+        return value;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    Montant montant = (Montant) o;
-    return Objects.equals(getValue(), montant.getValue());
-  }
+    @Override
+    public boolean equals(Object o) {
+        Montant montant = (Montant) o;
+        return Objects.equals(getValue(), montant.getValue());
+    }
 }
