@@ -2,6 +2,8 @@ package ch.hearc.cafheg.infrastructure.persistance;
 
 import ch.hearc.cafheg.business.allocations.Allocataire;
 import ch.hearc.cafheg.business.allocations.NoAVS;
+import ch.hearc.cafheg.business.exceptions.AllocataireNotFoundException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -61,12 +63,65 @@ public class AllocataireMapper extends Mapper {
       preparedStatement.setLong(1, id);
       ResultSet resultSet = preparedStatement.executeQuery();
       System.out.println("ResultSet#next");
-      resultSet.next();
-      System.out.println("Allocataire mapping");
-      return new Allocataire(new NoAVS(resultSet.getString(1)),
-          resultSet.getString(2), resultSet.getString(3));
+      if (resultSet.next()) {
+        System.out.println("Allocataire mapping");
+        return new Allocataire(new NoAVS(resultSet.getString(1)),
+                resultSet.getString(2), resultSet.getString(3));
+      } else {
+        throw new AllocataireNotFoundException("Allocataire non trouvé avec l'ID: " + id);
+      }
     } catch (SQLException e) {
+      System.err.println("SQL: Erreur: " + e.getMessage());
       throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Deletes an allocataire from the database based on its ID.
+   *
+   * @param id The id of the allocataire to be deleted.
+   * @return {@code true} if the recipient was successfully deleted
+   * {@code false} if no recipient was found with that ID
+   * @throws RuntimeException if a SQL error occurs during the delete operation.
+   */
+  public boolean deleteById(long id) {
+    Connection connection = activeJDBCConnection();
+    String query = "DELETE FROM ALLOCATAIRES WHERE NUMERO = ?";
+    try {
+      System.out.println("SQL: Suppression d'un allocataire avec ID: " + id);
+      PreparedStatement preparedStatement = connection.prepareStatement(query);
+      preparedStatement.setLong(1, id);
+      int rowAffected = preparedStatement.executeUpdate();
+      return rowAffected > 0;
+    } catch (SQLException e) {
+      System.out.println("SQL: Erreur: " + e.getMessage());
+      throw new RuntimeException("Erreur lors de la suppression de l'allocataire avec ID: " + id, e);
+    }
+  }
+
+  /**
+   * Updates the last name and first name of an allocataire.
+   *
+   * @param id the ID of the recipient to update.
+   * @param nom  the new last name for the recipient.
+   * @param prenom the new first name for the recipient.
+   * @return {@code true} if the allocataire was updated, {@code false} otherwise.
+   * @throws RuntimeException if a database access error occurs.
+   */
+  public boolean updateNameAndFirstname(long id, String nom, String prenom) {
+    Connection connection = activeJDBCConnection();
+    String query = "UPDATE ALLOCATAIRES SET NOM = ?, PRENOM = ? WHERE NUMERO = ?";
+    try {
+      System.out.println("SQL: Mise à jour d'un allocataire avec ID: " + id);
+      PreparedStatement preparedStatement = connection.prepareStatement(query);
+      preparedStatement.setString(1, nom);
+      preparedStatement.setString(2, prenom);
+      preparedStatement.setLong(3, id);
+      int rowsAffected = preparedStatement.executeUpdate();
+      return rowsAffected > 0;
+    } catch (SQLException e) {
+      System.out.println("SQL: Erreur: " + e.getMessage());
+      throw new RuntimeException("Erreur lors de la mise à jour de l'allocataire ID: " + id, e);
     }
   }
 }
