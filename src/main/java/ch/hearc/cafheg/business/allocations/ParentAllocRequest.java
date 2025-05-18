@@ -53,9 +53,6 @@ public class ParentAllocRequest {
         this.parent2CantonTravail = parent2CantonTravail;
     }
 
-    /**
-     * Constructeur par défaut
-     */
     public ParentAllocRequest() {
 
     }

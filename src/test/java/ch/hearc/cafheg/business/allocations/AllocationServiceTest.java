@@ -72,7 +72,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenParent1HasActivityAndParent2DoesNot_whenGetParentDroitAllocation_thenReturnParent1() {
+    void getParenDroitAllocation_GivenParent1HasActivityAndParent2DoesNot_ShouldReturnParent1() {
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", false, "Bienne", true,
                 BigDecimal.ZERO, BigDecimal.ZERO, true, true, false, false, "Neuchâtel", "Neuchâtel"
@@ -82,7 +82,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenParent2HasActivityAndParent1DoesNot_whenGetParentDroitAllocation_thenReturnParent2() {
+    void getParentDroitAllocation_GivenParent2HasActivityAndParent1DoesNot_ShouldReturnParent2 () {
         request = new ParentAllocRequest(
                 "Neuchâtel", false, "Neuchâtel", true, "Bienne", true,
                 BigDecimal.ZERO, BigDecimal.ZERO, true, true, false, false, "Neuchâtel", "Neuchâtel"
@@ -92,7 +92,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenBothParentsHaveActivityAndParent1HasHigherSalary_whenGetParentDroitAllocation_thenReturnParent1() {
+    void getParentDroitAllocation_GivenBothParentsHaveActivityAndParent1HasHigherSalary_ShouldReturnParent1 () {
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
                 new BigDecimal(3500), new BigDecimal(3000), true, true, false, false, "Neuchâtel", "Neuchâtel"
@@ -102,7 +102,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenBothParentsHaveActivityAndParent2HasHigherSalary_whenGetParentDroitAllocation_thenReturnParent2() {
+    void getParentDroitAllocation_GivenBothParentsHaveActivityAndParent2HasHigherSalary_ShouldReturnParent2 () {
 
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
@@ -113,7 +113,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenBothParentsHaveActivityAndEqualSalaries_whenGetParentDroitAllocation_thenReturnParent2() {
+    void getParentDroitAllocation_GivenBothParentsHaveActivityAndEqualSalaries_ShouldReturnParent2() {
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
                 new BigDecimal(3000), new BigDecimal(3000), true, true, false, false, "Neuchâtel", "Neuchâtel"
@@ -123,7 +123,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenNoParentHasActivity_whenGetParentDroitAllocation_thenReturnParent2() {
+    void getParentDroitAllocation_GivenNoParentHasActivity_ShouldReturnParent2() {
 
         request = new ParentAllocRequest(
                 "Neuchâtel", false, "Neuchâtel", false, "Bienne", true,
@@ -134,7 +134,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenBothParentsActiveAndOnlyParent1HasAuthority_whenGetParentDroitAllocation_thenReturnParent1() {
+    void getParentDroitAllocation_GivenBothParentsActiveAndOnlyParent1HasAuthority_ShouldReturnParent1() {
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
                 new BigDecimal(3000), new BigDecimal(4000), // Salaire Parent2 > Parent1
@@ -146,7 +146,19 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenOnlyParent1WorksInChildsCanton_whenGetParentDroitAllocation_thenReturnParent1() {
+    void getParentDroitAllocation_GivenOnlyParent2HasAuthority_ShouldReturnParent2() {
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
+                new BigDecimal(4000), new BigDecimal(3000),
+                false, true, false, false,
+                "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void getParenDroitAllocation_GivenOnlyParent1WorksInChildCanton_ShouldReturnParent1() {
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
                 new BigDecimal(3000), new BigDecimal(4000),
@@ -158,12 +170,35 @@ class AllocationServiceTest {
     }
 
     @Test
-    void givenBothParentsIndependentAndParent2HasHigherSalary_whenGetParentDroitAllocation_thenReturnParent2() {
+    void getParentDroitAllocation_GivenOnlyParent2WorksInChildCanton_ShouldReturnParent2() {
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Neuchâtel", true,
+                new BigDecimal(3000), new BigDecimal(4000),
+                true, true, false, false,
+                "Genève", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void getParentDroitAllocation_GivenBothParentsIndependentAndParent2HasHigherSalary_ShouldReturnParent2() {
         request = new ParentAllocRequest(
                 "Neuchâtel", true, "Neuchâtel", true, "Neuchâtel", true,
                 new BigDecimal(3000), new BigDecimal(4000),
                 true, true, true, true,
                 "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
+        assertThat(result).isEqualTo("Parent2");
+    }
+    @Test
+    void getParentDroitAllocation_GivenParentsSeparatedAndOnlyParent2LivesWithChild_ShouldReturnParent2() {
+        request = new ParentAllocRequest(
+                "Bienne", true, "Lausanne", true, "Bienne", false,
+                new BigDecimal(3000), new BigDecimal(3000),
+                true, true, false, false,
+                "Berne", "Berne"
         );
         String result = allocationService.getParentDroitAllocation(request);
         assertThat(result).isEqualTo("Parent2");
