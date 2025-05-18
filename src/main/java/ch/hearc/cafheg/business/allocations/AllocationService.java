@@ -41,7 +41,7 @@ public class AllocationService {
     Number salaireP1 = (Number) parameters.getOrDefault("parent1Salaire", BigDecimal.ZERO);
     Number salaireP2 = (Number) parameters.getOrDefault("parent2Salaire", BigDecimal.ZERO);
 
-    if(p1AL && !p2AL) {
+    if(p1AL && !p2AL) { //AL : Activité Lucrative... Pas allocataire !
       return PARENT_1;
     }
 
