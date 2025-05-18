@@ -21,6 +21,7 @@ class AllocationServiceTest {
 
     private AllocataireMapper allocataireMapper;
     private AllocationMapper allocationMapper;
+    private ParentAllocRequest request;
 
     @BeforeEach
     void setUp() {
@@ -72,59 +73,99 @@ class AllocationServiceTest {
 
     @Test
     void givenParent1HasActivityAndParent2DoesNot_whenGetParentDroitAllocation_thenReturnParent1() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("parent1ActiviteLucrative", true);
-        params.put("parent2ActiviteLucrative", false);
-
-        String result = allocationService.getParentDroitAllocation(params);
-
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", false, "Bienne", true,
+                BigDecimal.ZERO, BigDecimal.ZERO, true, true, false, false, "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
         assertThat(result).isEqualTo("Parent1");
     }
 
     @Test
     void givenParent2HasActivityAndParent1DoesNot_whenGetParentDroitAllocation_thenReturnParent2() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("parent1ActiviteLucrative", false);
-        params.put("parent2ActiviteLucrative", true);
-
-        String result = allocationService.getParentDroitAllocation(params);
-
+        request = new ParentAllocRequest(
+                "Neuchâtel", false, "Neuchâtel", true, "Bienne", true,
+                BigDecimal.ZERO, BigDecimal.ZERO, true, true, false, false, "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
         assertThat(result).isEqualTo("Parent2");
     }
 
     @Test
     void givenBothParentsHaveActivityAndParent1HasHigherSalary_whenGetParentDroitAllocation_thenReturnParent1() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("parent1ActiviteLucrative", true);
-        params.put("parent2ActiviteLucrative", true);
-        params.put("parent1Salaire", 3500);
-        params.put("parent2Salaire", 3000);
-
-        String result = allocationService.getParentDroitAllocation(params);
-
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
+                new BigDecimal(3500), new BigDecimal(3000), true, true, false, false, "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
         assertThat(result).isEqualTo("Parent1");
     }
+
     @Test
     void givenBothParentsHaveActivityAndParent2HasHigherSalary_whenGetParentDroitAllocation_thenReturnParent2() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("parent1ActiviteLucrative", true);
-        params.put("parent2ActiviteLucrative", true);
-        params.put("parent1Salaire", 3000);
-        params.put("parent2Salaire", 3500);
 
-        String result = allocationService.getParentDroitAllocation(params);
-
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
+                new BigDecimal(3000), new BigDecimal(3500), true, true, false, false, "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
         assertThat(result).isEqualTo("Parent2");
     }
+
     @Test
     void givenBothParentsHaveActivityAndEqualSalaries_whenGetParentDroitAllocation_thenReturnParent2() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("parent1ActiviteLucrative", true);
-        params.put("parent2ActiviteLucrative", true);
-        params.put("parent1Salaire", 3000);
-        params.put("parent2Salaire", 3000);
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
+                new BigDecimal(3000), new BigDecimal(3000), true, true, false, false, "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
+        assertThat(result).isEqualTo("Parent2");
+    }
 
-        String result = allocationService.getParentDroitAllocation(params);
+    @Test
+    void givenNoParentHasActivity_whenGetParentDroitAllocation_thenReturnParent2() {
+
+        request = new ParentAllocRequest(
+                "Neuchâtel", false, "Neuchâtel", false, "Bienne", true,
+                BigDecimal.ZERO, BigDecimal.ZERO, true, true, false, false, "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    void givenBothParentsActiveAndOnlyParent1HasAuthority_whenGetParentDroitAllocation_thenReturnParent1() {
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
+                new BigDecimal(3000), new BigDecimal(4000), // Salaire Parent2 > Parent1
+                true, false, false, false,
+                "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void givenOnlyParent1WorksInChildsCanton_whenGetParentDroitAllocation_thenReturnParent1() {
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Bienne", true,
+                new BigDecimal(3000), new BigDecimal(4000),
+                true, true, false, false,
+                "Neuchâtel", "Berne"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    void givenBothParentsIndependentAndParent2HasHigherSalary_whenGetParentDroitAllocation_thenReturnParent2() {
+        request = new ParentAllocRequest(
+                "Neuchâtel", true, "Neuchâtel", true, "Neuchâtel", true,
+                new BigDecimal(3000), new BigDecimal(4000),
+                true, true, true, true,
+                "Neuchâtel", "Neuchâtel"
+        );
+        String result = allocationService.getParentDroitAllocation(request);
         assertThat(result).isEqualTo("Parent2");
     }
 
