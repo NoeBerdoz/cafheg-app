@@ -104,9 +104,11 @@ public class ParentAllocRequest {
     public boolean isParent2EstIndependant() {
         return parent2EstIndependant;
     }
+
     public String getParent1CantonTravail() {
         return parent1CantonTravail;
     }
+
     public String getParent2CantonTravail() {
         return parent2CantonTravail;
     }

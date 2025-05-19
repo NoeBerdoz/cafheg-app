@@ -7,7 +7,7 @@ import java.sql.Connection;
  * de recupérer la connection JDBC active.
  */
 public class Mapper {
-  protected Connection activeJDBCConnection() {
-    return Database.activeJDBCConnection();
-  }
+    protected Connection activeJDBCConnection() {
+        return Database.activeJDBCConnection();
+    }
 }

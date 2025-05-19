@@ -14,27 +14,27 @@ public class AllocationService {
     private static final String PARENT_1 = "Parent1";
     private static final String PARENT_2 = "Parent2";
 
-  private final AllocataireMapper allocataireMapper;
-  private final AllocationMapper allocationMapper;
-  private final VersementMapper versementMapper;
+    private final AllocataireMapper allocataireMapper;
+    private final AllocationMapper allocationMapper;
+    private final VersementMapper versementMapper;
 
-  public AllocationService(
-      AllocataireMapper allocataireMapper,
-      AllocationMapper allocationMapper,
-      VersementMapper versementMapper) {
-    this.allocataireMapper = allocataireMapper;
-    this.allocationMapper = allocationMapper;
-    this.versementMapper = versementMapper;
-  }
+    public AllocationService(
+            AllocataireMapper allocataireMapper,
+            AllocationMapper allocationMapper,
+            VersementMapper versementMapper) {
+        this.allocataireMapper = allocataireMapper;
+        this.allocationMapper = allocationMapper;
+        this.versementMapper = versementMapper;
+    }
 
-  public List<Allocataire> findAllAllocataires(String likeNom) {
-    System.out.println("Rechercher tous les allocataires");
-    return allocataireMapper.findAll(likeNom);
-  }
+    public List<Allocataire> findAllAllocataires(String likeNom) {
+        System.out.println("Rechercher tous les allocataires");
+        return allocataireMapper.findAll(likeNom);
+    }
 
-  public List<Allocation> findAllocationsActuelles() {
-    return allocationMapper.findAll();
-  }
+    public List<Allocation> findAllocationsActuelles() {
+        return allocationMapper.findAll();
+    }
 
     public String getParentDroitAllocation(ParentAllocRequest request) {
         System.out.println("Déterminer le parent ayant droit à l'allocation");
@@ -113,10 +113,10 @@ public class AllocationService {
      * The allocataire must exist and must not have any associated versements.
      *
      * @param allocataireId the ID of the allocataire to delete.
-     * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
+     * @throws AllocataireNotFoundException      if the allocataire with the given ID is not found.
      * @throws AllocataireHasVersementsException if the allocataire has existing versements.
-     * @throws RuntimeException if the deletion fails in the database for other reasons
-     * after initial checks have passed.
+     * @throws RuntimeException                  if the deletion fails in the database for other reasons
+     *                                           after initial checks have passed.
      */
     public void deleteAllocataire(long allocataireId) {
         System.out.println("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
@@ -131,7 +131,7 @@ public class AllocationService {
         }
 
         boolean deleted = allocataireMapper.deleteById(allocataireId);
-        if(!deleted) {
+        if (!deleted) {
             throw new RuntimeException("La suppression de l'allocataire avec ID: " + allocataireId + " a échoué en base de données bien qu'il ait été trouvé initialement et n'ait pas de versements.");
         }
 
@@ -144,14 +144,14 @@ public class AllocationService {
      * The update is performed only if the provided new last name or new first name
      * is different from the existing ones. The AVS number remains unchanged.
      *
-     * @param allocataireId   the ID of the allocataire to update.
-     * @param newNom          the new last name for the allocataire; cannot be null or empty.
-     * @param newPrenom       the new first name for the allocataire; cannot be null or empty.
+     * @param allocataireId the ID of the allocataire to update.
+     * @param newNom        the new last name for the allocataire; cannot be null or empty.
+     * @param newPrenom     the new first name for the allocataire; cannot be null or empty.
      * @return the updated {@link Allocataire} object.
-     * @throws IllegalArgumentException if {@code newNom} or {@code newPrenom} is null or empty.
+     * @throws IllegalArgumentException     if {@code newNom} or {@code newPrenom} is null or empty.
      * @throws AllocataireNotFoundException if the allocataire with the given ID is not found.
-     * @throws NoChangeToUpdateException if neither the last name nor the first name has changed.
-     * @throws RuntimeException if the update fails in the database for other reasons.
+     * @throws NoChangeToUpdateException    if neither the last name nor the first name has changed.
+     * @throws RuntimeException             if the update fails in the database for other reasons.
      */
     public Allocataire updateAllocataire(long allocataireId, String newNom, String newPrenom) {
         System.out.println("Service: Tentative de mise à jour du nom de l'allocataire avec ID: " + allocataireId);
