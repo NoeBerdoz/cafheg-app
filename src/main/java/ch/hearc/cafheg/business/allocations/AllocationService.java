@@ -6,10 +6,13 @@ import ch.hearc.cafheg.business.exceptions.NoChangeToUpdateException;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import ch.hearc.cafheg.infrastructure.persistance.VersementMapper;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class AllocationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AllocationService.class);
 
     private static final String PARENT_1 = "Parent1";
     private static final String PARENT_2 = "Parent2";
@@ -28,7 +31,7 @@ public class AllocationService {
     }
 
     public List<Allocataire> findAllAllocataires(String likeNom) {
-        System.out.println("Rechercher tous les allocataires");
+        logger.info("Service: Recherche des allocataires", likeNom);
         return allocataireMapper.findAll(likeNom);
     }
 
@@ -37,7 +40,7 @@ public class AllocationService {
     }
 
     public String getParentDroitAllocation(ParentAllocRequest request) {
-        System.out.println("Déterminer le parent ayant droit à l'allocation");
+        logger.info("Service: Détermination du parent ayant droit à l’allocation");
 
         if (hasOnlyParent1Activity(request)) return PARENT_1;
         if (hasOnlyParent2Activity(request)) return PARENT_2;
@@ -119,23 +122,30 @@ public class AllocationService {
      *                                           after initial checks have passed.
      */
     public void deleteAllocataire(long allocataireId) {
-        System.out.println("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
+        logger.info("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
 
         Allocataire allocataire = allocataireMapper.findById(allocataireId);
         if (allocataire == null) {
+            logger.error("Allocataire non trouvé avec ID: " + allocataireId);
             throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + " n'a pas été trouvé.");
         }
 
         if (versementMapper.countVersementsByAllocataireId(allocataireId) > 0) {
+            logger.warn("Suppression refusée : l'allocataire ID {} a des versements", allocataireId);
             throw new AllocataireHasVersementsException("L'allocataire avec ID: " + allocataireId + " a des versements.");
         }
 
-        boolean deleted = allocataireMapper.deleteById(allocataireId);
-        if (!deleted) {
-            throw new RuntimeException("La suppression de l'allocataire avec ID: " + allocataireId + " a échoué en base de données bien qu'il ait été trouvé initialement et n'ait pas de versements.");
+        try {
+            boolean deleted = allocataireMapper.deleteById(allocataireId);
+            if (!deleted) {
+                logger.error("La suppression a échoué pour l'allocataire ID: {}", allocataireId);
+                throw new RuntimeException("La suppression a échoué.");
+            }
+            logger.info("Service: Allocataire ID {} supprimé avec succès", allocataireId);
+        } catch (RuntimeException e) {
+            logger.error("Erreur lors de la suppression de l’allocataire ID {}", allocataireId, e);
+            throw e;
         }
-
-        System.out.println("Service: Allocataire avec ID " + allocataireId + " supprimé avec succès.");
     }
 
     /**
@@ -154,15 +164,17 @@ public class AllocationService {
      * @throws RuntimeException             if the update fails in the database for other reasons.
      */
     public Allocataire updateAllocataire(long allocataireId, String newNom, String newPrenom) {
-        System.out.println("Service: Tentative de mise à jour du nom de l'allocataire avec ID: " + allocataireId);
+        logger.info("Service: Tentative de mise à jour du nom/prénom de l'allocataire avec ID: {}", allocataireId);
 
         // Validate input
         if (newNom == null || newNom.trim().isEmpty() || newPrenom == null || newPrenom.trim().isEmpty()) {
+            logger.warn("Le nom ou le prénom fourni est vide pour l'allocataire ID: {}", allocataireId);
             throw new IllegalArgumentException("Le nom et le prénom de l'allocataire ne peuvent pas être vides.");
         }
 
         Allocataire existingAllocataire = allocataireMapper.findById(allocataireId);
         if (existingAllocataire == null) {
+            logger.error("Allocataire non trouvé avec ID: {}", allocataireId);
             throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + "n'a pas été trouvé");
         }
 
@@ -171,16 +183,18 @@ public class AllocationService {
 
         // Update should be done only if a changed is detected
         if (!nameChanged && !firstnameChanged) {
+            logger.info("Aucun changement détecté pour l'allocataire ID: {}", allocataireId);
             throw new NoChangeToUpdateException("Aucune modification détectée pour l'allocataire ID: " + allocataireId);
         }
 
         boolean updatedInDb = allocataireMapper.updateNameAndFirstname(allocataireId, newNom.trim(), newPrenom.trim());
 
         if (!updatedInDb) {
+            logger.error("La mise à jour de l'allocataire ID: {} a échoué en base de données.", allocataireId);
             throw new RuntimeException("La mise à jour de l'allocataire ID: " + allocataireId + " a échoué en base de données.");
         }
 
-        System.out.println("Service: Allocataire avec ID: " + allocataireId + " a été mise à jour avec succès");
+        logger.info("Service: Allocataire ID {} mis à jour avec succès", allocataireId);
         return new Allocataire(existingAllocataire.getNoAVS(), newNom.trim(), newPrenom.trim());
     }
 }
