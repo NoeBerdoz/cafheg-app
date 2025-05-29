@@ -27,7 +27,7 @@ public class AllocataireMapper extends Mapper {
         try {
             PreparedStatement preparedStatement;
             if (likeNom == null) {
-                log.debug("Executing SQL: {}", QUERY_FIND_ALL);
+                log.trace("Executing SQL: {}", QUERY_FIND_ALL);
                 preparedStatement = connection
                         .prepareStatement(QUERY_FIND_ALL);
             } else {
