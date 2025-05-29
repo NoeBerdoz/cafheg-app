@@ -126,7 +126,7 @@ public class AllocationService {
 
         Allocataire allocataire = allocataireMapper.findById(allocataireId);
         if (allocataire == null) {
-            logger.error("Allocataire non trouvé avec ID: " + allocataireId);
+            logger.warn("Allocataire non trouvé avec ID: " + allocataireId);
             throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + " n'a pas été trouvé.");
         }
 
