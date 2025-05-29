@@ -183,7 +183,7 @@ public class AllocationService {
 
         // Update should be done only if a changed is detected
         if (!nameChanged && !firstnameChanged) {
-            logger.info("Aucun changement détecté pour l'allocataire ID: {}", allocataireId);
+            logger.warn("Aucun changement détecté pour l'allocataire ID: {}", allocataireId);
             throw new NoChangeToUpdateException("Aucune modification détectée pour l'allocataire ID: " + allocataireId);
         }
 
