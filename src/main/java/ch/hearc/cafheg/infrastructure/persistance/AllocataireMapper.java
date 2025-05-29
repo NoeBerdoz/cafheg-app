@@ -31,7 +31,7 @@ public class AllocataireMapper extends Mapper {
                 preparedStatement = connection
                         .prepareStatement(QUERY_FIND_ALL);
             } else {
-                log.debug("Executing SQL: {}", QUERY_FIND_WHERE_NOM_LIKE);
+                log.trace("Executing SQL: {}", QUERY_FIND_WHERE_NOM_LIKE);
                 preparedStatement = connection
                         .prepareStatement(QUERY_FIND_WHERE_NOM_LIKE);
                 preparedStatement.setString(1, likeNom + "%");
