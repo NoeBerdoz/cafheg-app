@@ -22,7 +22,7 @@ public class AllocataireMapper extends Mapper {
     private static final String QUERY_FIND_WHERE_NUMERO = "SELECT NO_AVS, NOM, PRENOM FROM ALLOCATAIRES WHERE NUMERO=?";
 
     public List<Allocataire> findAll(String likeNom) {
-        log.info("findAll() called with likeNom='{}'", likeNom);
+        log.debug("findAll() called with likeNom='{}'", likeNom);
         Connection connection = activeJDBCConnection();
         try {
             PreparedStatement preparedStatement;
