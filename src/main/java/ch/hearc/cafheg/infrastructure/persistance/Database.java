@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import javax.sql.DataSource;
 
 public class Database {
-    private static final Logger logger = LoggerFactory.getLogger(Database.class);
+    private static final Logger log = LoggerFactory.getLogger(Database.class);
     /**
      * Pool de connections JDBC
      */
@@ -43,22 +43,22 @@ public class Database {
      * @return Le résultat de l'éxécution de la fonction
      */
     public static <T> T inTransaction(Supplier<T> inTransaction) {
-        logger.info("inTransaction#start");
+        log.info("inTransaction#start");
         try {
-            logger.debug("inTransaction#getConnection");
+            log.debug("inTransaction#getConnection");
             connection.set(dataSource.getConnection());
             return inTransaction.get();
         } catch (SQLException e) {
-            logger.error("Erreur lors de l'obtention de la connexion JDBC", e);
+            log.error("Erreur lors de l'obtention de la connexion JDBC", e);
             throw new RuntimeException(e);
         } finally {
             try {
-                logger.debug("inTransaction#closeConnection");
+                log.debug("inTransaction#closeConnection");
                 connection.get().close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-            logger.info("inTransaction#end");
+            log.info("inTransaction#end");
             connection.remove();
         }
     }
@@ -71,12 +71,12 @@ public class Database {
      * Initialisation du pool de connections.
      */
     public void start() {
-        logger.info("Initialisation du datasource");
+        log.info("Initialisation du datasource");
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:h2:mem:sample");
         config.setMaximumPoolSize(20);
         config.setDriverClassName("org.h2.Driver");
         dataSource = new HikariDataSource(config);
-        logger.info("Datasource initialisé");
+        log.info("Datasource initialisé");
     }
 }

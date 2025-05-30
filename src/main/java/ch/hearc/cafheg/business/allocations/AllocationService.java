@@ -12,7 +12,7 @@ import java.util.List;
 
 public class AllocationService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AllocationService.class);
+    private static final Logger log = LoggerFactory.getLogger(AllocationService.class);
 
     private static final String PARENT_1 = "Parent1";
     private static final String PARENT_2 = "Parent2";
@@ -31,7 +31,7 @@ public class AllocationService {
     }
 
     public List<Allocataire> findAllAllocataires(String likeNom) {
-        logger.info("Service: Recherche des allocataires", likeNom);
+        log.debug("Service: Recherche des allocataires", likeNom);
         return allocataireMapper.findAll(likeNom);
     }
 
@@ -40,7 +40,7 @@ public class AllocationService {
     }
 
     public String getParentDroitAllocation(ParentAllocRequest request) {
-        logger.info("Service: Détermination du parent ayant droit à l’allocation");
+        log.debug("Service: Détermination du parent ayant droit à l’allocation");
 
         if (hasOnlyParent1Activity(request)) return PARENT_1;
         if (hasOnlyParent2Activity(request)) return PARENT_2;
@@ -122,28 +122,28 @@ public class AllocationService {
      *                                           after initial checks have passed.
      */
     public void deleteAllocataire(long allocataireId) {
-        logger.info("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
+        log.debug("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
 
         Allocataire allocataire = allocataireMapper.findById(allocataireId);
         if (allocataire == null) {
-            logger.error("Allocataire non trouvé avec ID: " + allocataireId);
+            log.warn("Allocataire non trouvé avec ID: " + allocataireId);
             throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + " n'a pas été trouvé.");
         }
 
         if (versementMapper.countVersementsByAllocataireId(allocataireId) > 0) {
-            logger.warn("Suppression refusée : l'allocataire ID {} a des versements", allocataireId);
+            log.warn("Suppression refusée : l'allocataire ID {} a des versements", allocataireId);
             throw new AllocataireHasVersementsException("L'allocataire avec ID: " + allocataireId + " a des versements.");
         }
 
         try {
             boolean deleted = allocataireMapper.deleteById(allocataireId);
             if (!deleted) {
-                logger.error("La suppression a échoué pour l'allocataire ID: {}", allocataireId);
+                log.error("La suppression a échoué pour l'allocataire ID: {}", allocataireId);
                 throw new RuntimeException("La suppression a échoué.");
             }
-            logger.info("Service: Allocataire ID {} supprimé avec succès", allocataireId);
+            log.info("Service: Allocataire ID {} supprimé avec succès", allocataireId);
         } catch (RuntimeException e) {
-            logger.error("Erreur lors de la suppression de l’allocataire ID {}", allocataireId, e);
+            log.error("Erreur lors de la suppression de l’allocataire ID {}", allocataireId, e);
             throw e;
         }
     }
@@ -164,17 +164,17 @@ public class AllocationService {
      * @throws RuntimeException             if the update fails in the database for other reasons.
      */
     public Allocataire updateAllocataire(long allocataireId, String newNom, String newPrenom) {
-        logger.info("Service: Tentative de mise à jour du nom/prénom de l'allocataire avec ID: {}", allocataireId);
+        log.debug("Service: Tentative de mise à jour du nom/prénom de l'allocataire avec ID: {}", allocataireId);
 
         // Validate input
         if (newNom == null || newNom.trim().isEmpty() || newPrenom == null || newPrenom.trim().isEmpty()) {
-            logger.warn("Le nom ou le prénom fourni est vide pour l'allocataire ID: {}", allocataireId);
+            log.warn("Le nom ou le prénom fourni est vide pour l'allocataire ID: {}", allocataireId);
             throw new IllegalArgumentException("Le nom et le prénom de l'allocataire ne peuvent pas être vides.");
         }
 
         Allocataire existingAllocataire = allocataireMapper.findById(allocataireId);
         if (existingAllocataire == null) {
-            logger.error("Allocataire non trouvé avec ID: {}", allocataireId);
+            log.warn("Allocataire non trouvé avec ID: {}", allocataireId);
             throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + "n'a pas été trouvé");
         }
 
@@ -183,18 +183,18 @@ public class AllocationService {
 
         // Update should be done only if a changed is detected
         if (!nameChanged && !firstnameChanged) {
-            logger.info("Aucun changement détecté pour l'allocataire ID: {}", allocataireId);
+            log.info("Aucun changement détecté pour l'allocataire ID: {}", allocataireId);
             throw new NoChangeToUpdateException("Aucune modification détectée pour l'allocataire ID: " + allocataireId);
         }
 
         boolean updatedInDb = allocataireMapper.updateNameAndFirstname(allocataireId, newNom.trim(), newPrenom.trim());
 
         if (!updatedInDb) {
-            logger.error("La mise à jour de l'allocataire ID: {} a échoué en base de données.", allocataireId);
+            log.error("La mise à jour de l'allocataire ID: {} a échoué en base de données.", allocataireId);
             throw new RuntimeException("La mise à jour de l'allocataire ID: " + allocataireId + " a échoué en base de données.");
         }
 
-        logger.info("Service: Allocataire ID {} mis à jour avec succès", allocataireId);
+        log.info("Service: Allocataire ID {} mis à jour avec succès", allocataireId);
         return new Allocataire(existingAllocataire.getNoAVS(), newNom.trim(), newPrenom.trim());
     }
 }
