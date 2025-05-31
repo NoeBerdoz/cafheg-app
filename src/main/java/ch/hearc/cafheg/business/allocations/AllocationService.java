@@ -31,7 +31,7 @@ public class AllocationService {
     }
 
     public List<Allocataire> findAllAllocataires(String likeNom) {
-        log.debug("Service: Recherche des allocataires", likeNom);
+        log.info("Service: Recherche des allocataires", likeNom);
         return allocataireMapper.findAll(likeNom);
     }
 
@@ -40,7 +40,7 @@ public class AllocationService {
     }
 
     public String getParentDroitAllocation(ParentAllocRequest request) {
-        log.debug("Service: Détermination du parent ayant droit à l’allocation");
+        log.info("Service: Détermination du parent ayant droit à l’allocation");
 
         if (hasOnlyParent1Activity(request)) return PARENT_1;
         if (hasOnlyParent2Activity(request)) return PARENT_2;
@@ -122,7 +122,7 @@ public class AllocationService {
      *                                           after initial checks have passed.
      */
     public void deleteAllocataire(long allocataireId) {
-        log.debug("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
+        log.info("Service: Tentative de suppression de l'allocataire avec ID: " + allocataireId);
 
         Allocataire allocataire = allocataireMapper.findById(allocataireId);
         if (allocataire == null) {
@@ -164,7 +164,7 @@ public class AllocationService {
      * @throws RuntimeException             if the update fails in the database for other reasons.
      */
     public Allocataire updateAllocataire(long allocataireId, String newNom, String newPrenom) {
-        log.debug("Service: Tentative de mise à jour du nom/prénom de l'allocataire avec ID: {}", allocataireId);
+        log.info("Service: Tentative de mise à jour du nom/prénom de l'allocataire avec ID: {}", allocataireId);
 
         // Validate input
         if (newNom == null || newNom.trim().isEmpty() || newPrenom == null || newPrenom.trim().isEmpty()) {
@@ -183,7 +183,7 @@ public class AllocationService {
 
         // Update should be done only if a changed is detected
         if (!nameChanged && !firstnameChanged) {
-            log.info("Aucun changement détecté pour l'allocataire ID: {}", allocataireId);
+            log.warn("Aucun changement détecté pour l'allocataire ID: {}", allocataireId);
             throw new NoChangeToUpdateException("Aucune modification détectée pour l'allocataire ID: " + allocataireId);
         }
 
