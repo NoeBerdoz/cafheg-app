@@ -42,7 +42,7 @@ public class AllocataireMapper extends Mapper {
             log.debug("Exécution de la requête");
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
 
-                log.debug("Allocataire mapping");
+                log.trace("Allocataire mapping");
                 while (resultSet.next()) {
                     log.trace("ResultSet#next");
                     allocataires
