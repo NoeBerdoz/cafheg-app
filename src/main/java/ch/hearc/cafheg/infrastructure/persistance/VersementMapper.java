@@ -124,7 +124,7 @@ public class VersementMapper extends Mapper {
             }
             return 0L;
         } catch (SQLException e) {
-            log.error("Erreur lors du comptage des versements pour l'allocataire ID: " + allocataireId, e);
+            log.error("Erreur lors du comptage des versements pour l'allocataire ID: {} ", allocataireId, e);
             throw new RuntimeException("Erreur lors du comptage des versements pour l'allocataire ID: " + allocataireId, e);
         }
     }
