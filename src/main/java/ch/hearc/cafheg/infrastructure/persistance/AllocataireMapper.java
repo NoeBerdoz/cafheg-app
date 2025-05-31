@@ -68,7 +68,7 @@ public class AllocataireMapper extends Mapper {
             ResultSet resultSet = preparedStatement.executeQuery();
             log.trace("ResultSet#next");
             if (resultSet.next()) {
-                log.debug("Allocataire mapping");
+                log.trace("Allocataire mapping");
                 return new Allocataire(new NoAVS(resultSet.getString(1)),
                         resultSet.getString(2), resultSet.getString(3));
             } else {
