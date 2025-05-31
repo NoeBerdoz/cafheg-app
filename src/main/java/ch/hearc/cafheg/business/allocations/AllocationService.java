@@ -21,7 +21,6 @@ public class AllocationService {
   }
 
   public List<Allocataire> findAllAllocataires(String likeNom) {
-    System.out.println("Rechercher tous les allocataires");
     return allocataireMapper.findAll(likeNom);
   }
 
@@ -33,43 +32,58 @@ public class AllocationService {
      * Méthode qui détermine quel parent a le droit aux allocations
      * @param droitsAllocations Paramètres de la requête
      * @return Le parent qui a le droit aux allocations
-      1 seul parent actif (Soit P1, soit P2)
-      Les 2 parents sont actifs --> On compare les salaires
-      Les 2 parents sont actifs et ont le même salaire --> On retourne P2 (car pas strictement plus grand que P1)
-      Les 2 parents sont inactifs --> On retourne P2 (car pas strictement plus grand que P1)
-      Plus valable avec la classe -> La map fournie en paramètre ne contient pas les valeurs nécessaires
-        --> getOrDefault renvoie la valeur par défaut et donc P2 doit être retourné
-      La résidence de l'enfant et des parents n'a aucun impact sur le droit aux allocations
     */
   public String getParentDroitAllocation(DroitsAllocations droitsAllocations) {
     System.out.println("Déterminer quel parent a le droit aux allocations");
     Boolean p1AL = droitsAllocations.getParent1ActiviteLucrative();
     Boolean p2AL = droitsAllocations.getParent2ActiviteLucrative();
+    Boolean p1AP = droitsAllocations.getParent1AutoriteParentale();
+    Boolean p2AP = droitsAllocations.getParent2AutoriteParentale();
+    Boolean parentsEnsemble = droitsAllocations.getParentsEnsemble();
+    String enfantResidence = droitsAllocations.getEnfantResidence();
+    Boolean enfantVitAvecP1 = droitsAllocations.getEnfantVitAvecParent1();
+    Boolean enfantVitAvecP2 = droitsAllocations.getEnfantVitAvecParent2();
+    String p1Residence = droitsAllocations.getParent1Residence();
+    String p2Residence = droitsAllocations.getParent2Residence();
+    Canton enfantCantonResidence = droitsAllocations.getEnfantCantonResidence();
+    Canton p1CantonTravail = droitsAllocations.getParent1CantonTravail();
+    Canton p2CantonTravail = droitsAllocations.getParent2CantonTravail();
+    Boolean p1Independant = droitsAllocations.getParent1Independant();
+    Boolean p2Independant = droitsAllocations.getParent2Independant();
     BigDecimal salaireP1 = droitsAllocations.getParent1Salaire();
     BigDecimal salaireP2 = droitsAllocations.getParent2Salaire();
-    String enfantResidence = droitsAllocations.getEnfantResidence();
-    String parent1Residence = droitsAllocations.getParent1Residence();
-    String parent2Residence = droitsAllocations.getParent2Residence();
-    Boolean parentsEnsemble = droitsAllocations.getParentsEnsemble();
 
+    if (p1AL && !p2AL) { return PARENT_1; }
+    if (!p1AL && p2AL) { return PARENT_2; }
+    if (p1AP && !p2AP) { return PARENT_1; }
+    if (!p1AP && p2AP) { return PARENT_2; }
     if (!parentsEnsemble) {
-      if (enfantResidence.equals(parent1Residence)) {
+      // Si les parents ne sont pas ensemble, on regarde où vit l'enfant
+      if (enfantResidence.equals(p1Residence) && enfantVitAvecP1) {
         return PARENT_1;
-      } else if (enfantResidence.equals(parent2Residence)) {
-        return PARENT_2;
       }
-    } else {
-      if(p1AL && !p2AL) {
-        return PARENT_1;
-      } else if(!p1AL && p2AL) {
-        return PARENT_2;
-      } else if (!p1AL && !p2AL) {
-        // Si les deux parents sont inactifs, on retourne PARENT_2
+      if (enfantResidence.equals(p2Residence) && enfantVitAvecP2) {
         return PARENT_2;
       }
     }
+    // Si l'enfant vit avec les deux parents, on regarde le canton de travail
+    if (p1CantonTravail == enfantCantonResidence) {
+      return PARENT_1;
+    } else if (p2CantonTravail == enfantCantonResidence) {
+      return PARENT_2;
+    }
+    if (p1Independant && !p2Independant) {
+      return PARENT_2;
+    }
+    if (!p1Independant && p2Independant) {
+        return PARENT_1;
+    }
+    // Si les deux parents sont salariées, on compare les salaires
+    if (!p1Independant && !p2Independant) {
+      return salaireP1.doubleValue() > salaireP2.doubleValue() ? PARENT_1 : PARENT_2;
+    }
 
-    //Si les parents sont ensemble et les deux actifs, on compare les salaires
+    // Si les parents vivent ensemble et les deux sont indépendants, on compare les salaires
     return salaireP1.doubleValue() > salaireP2.doubleValue() ? PARENT_1 : PARENT_2;
   }
 }

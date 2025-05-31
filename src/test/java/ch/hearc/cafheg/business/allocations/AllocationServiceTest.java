@@ -68,72 +68,133 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getFin()).isNull());
   }
 
-  @Test
-  void givenParent1ActiveAndParent2Inactive_ShouldReturnParent1() {
-    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
-            "Bienne", false, true, new BigDecimal(5000), new BigDecimal(4000));
-    String result = allocationService.getParentDroitAllocation(droitsAllocations);
-    assertThat(result).isEqualTo("Parent1");
-  }
+@Test
+void givenParent1ActiveAndParent2Inactive_ShouldReturnParent1() {
+  droitsAllocations = new DroitsAllocations(true, false, true, true, true,
+          "Neuchâtel", true, false, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.NE, Canton.NE,
+          false, false, new BigDecimal(5000), new BigDecimal(0)
+  );
+  String result = allocationService.getParentDroitAllocation(droitsAllocations);
+  assertThat(result).isEqualTo("Parent1");
+}
 
+  //1 - 4 OK
   @Test
   void givenParent1InactiveAndParent2Active_ShouldReturnParent2() {
-    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", false,
-            "Bienne", true, true, new BigDecimal(5000), new BigDecimal(4000));
+    droitsAllocations = new DroitsAllocations(false, true, true, true, true,
+            "Neuchâtel", false, true, "Neuchâtel", "Bienne", Canton.NE, Canton.NE, Canton.NE,
+            false, false, new BigDecimal(0), new BigDecimal(5000)
+    );
     String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent2");
   }
 
   @Test
-  void givenBothParentsActive_ShouldReturnParentWithHigherSalary() {
-    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
-            "Bienne", true, true, new BigDecimal(5000), new BigDecimal(4000));
+  void givenParent1HasAuthority_ShouldReturnParent1() {
+    droitsAllocations = new DroitsAllocations(true, true, true, false, false,
+            "Neuchâtel", true, false, "Neuchâtel", "Bienne", Canton.NE, Canton.NE, Canton.BE,
+            false, false, new BigDecimal(5000), new BigDecimal(4000));
     String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent1");
   }
 
   @Test
-    void givenBothParentsActiveWithEqualSalary_ShouldReturnParent2() {
-        droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
-                "Bienne", true, true, new BigDecimal(4000), new BigDecimal(4000));
+  void givenParent2HasAuthority_ShouldReturnParent2() {
+    droitsAllocations = new DroitsAllocations(true, true, false, true, true,
+            "Bienne", false, true, "Neuchâtel", "Bienne", Canton.BE, Canton.NE, Canton.BE,
+            false, false, new BigDecimal(4000), new BigDecimal(5000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
+    assertThat(result).isEqualTo("Parent2");
+  }
+
+  @Test
+  void givenBothParentHaveAuthorityAndAreSeparated_ShouldReturnParent1WhoLiveWithChild() {
+    droitsAllocations = new DroitsAllocations(true, true, true, true, false,
+            "Neuchâtel", true, false, "Neuchâtel", "Bienne", Canton.NE, Canton.NE, Canton.BE,
+            false, false, new BigDecimal(5000), new BigDecimal(4000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
+    assertThat(result).isEqualTo("Parent1");
+  }
+
+  @Test
+    void givenBothParentsHaveAuthorityAndAreSeparated_ShouldReturnParent2WhoLiveWithChild() {
+        droitsAllocations = new DroitsAllocations(true, true, true, true, false,
+                "Bienne", false, true, "Neuchâtel", "Bienne", Canton.BE, Canton.NE, Canton.BE,
+                false, false, new BigDecimal(4000), new BigDecimal(5000));
         String result = allocationService.getParentDroitAllocation(droitsAllocations);
         assertThat(result).isEqualTo("Parent2");
     }
 
   @Test
-  void givenBothParentsInactive_ShouldReturnParent2() {
-    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", false,
-            "Bienne", false, true, new BigDecimal(0), new BigDecimal(0));
+  void givenBothParentsLiveTogether_ShouldReturnParent1WhoWorkInLivingCanton() {
+    droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+            "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.NE, Canton.BE,
+            false, false, new BigDecimal(4000), new BigDecimal(5000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
+    assertThat(result).isEqualTo("Parent1");
+  }
+
+  @Test
+  void givenBothParentsLiveTogether_ShouldReturnParent2WhoWorkInLivingCanton() {
+    droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+            "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.BE, Canton.NE,
+            false, false, new BigDecimal(4000), new BigDecimal(5000));
     String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent2");
   }
 
-  /* Ceci n'est plus possible car parent1Salaire et parent2Salaire ne peuvent pas être null
   @Test
-  void givenBothParentsActiveWithMissingSalary_ShouldReturnParent2() {
-    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
-            "Bienne", true, true, null, null);
+    void givenBothParentsActiveAndParent2IsIndependant_ShouldReturnParent1() {
+        droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+                "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.BE, Canton.BE,
+                false, true, new BigDecimal(4000), new BigDecimal(5000));
+        String result = allocationService.getParentDroitAllocation(droitsAllocations);
+        assertThat(result).isEqualTo("Parent1");
+    }
+
+  @Test
+    void givenBothParentsActiveAndParent1IsIndependant_ShouldReturnParent2() {
+        droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+                "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.BE, Canton.BE,
+                true, false, new BigDecimal(4000), new BigDecimal(5000));
+        String result = allocationService.getParentDroitAllocation(droitsAllocations);
+        assertThat(result).isEqualTo("Parent2");
+    }
+
+  @Test
+  void givenBothParentsEmployed_AndParent1EarnMore_ShouldReturnParent1() {
+    droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+            "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.BE, Canton.BE,
+            false, false, new BigDecimal(5000), new BigDecimal(4000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
+    assertThat(result).isEqualTo("Parent1");
+  }
+
+  @Test
+  void givenBothParentsEmployed_AndParent2EarnMore_ShouldReturnParent2() {
+    droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+            "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.BE, Canton.BE,
+            false, false, new BigDecimal(4000), new BigDecimal(5000));
     String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent2");
   }
-  */
 
-  /* Ceci n'est plus possible car parent1Salaire et parent2Salaire sont de type BigDecimal
   @Test
-  void givenIncorrectSalaryParameters_ShouldReturnParent2() {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("parent1ActiviteLucrative", false);
-    parameters.put("parent2ActiviteLucrative", false);
-    parameters.put("parent1Salaire", "Vanessa");
-    parameters.put("parent2Salaire", "David");
+  void givenBothParentsIndependant_AndParent1EarnMore_ShouldReturnParent1() {
+    droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+            "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.BE, Canton.BE,
+            true, true, new BigDecimal(5000), new BigDecimal(4000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
+    assertThat(result).isEqualTo("Parent1");
+  }
 
-    assertThrows(ClassCastException.class, () ->
-      allocationService.getParentDroitAllocation(droitsAllocations)
-    );
-    // Avec des paramètres non valides, on ne peut pas tester le résultat sans la ligne ci-dessus
-    // La méthode getParentDroitAllocation va lever une ClassCastException
-    // String result = allocationService.getParentDroitAllocation(parameters);
-    // assertThat(result).isEqualTo("Parent2");
-  }*/
+  @Test
+  void givenBothParentsIndependant_AndParent2EarnMore_ShouldReturnParent2() {
+    droitsAllocations = new DroitsAllocations(true, true, true, true, true,
+            "Neuchâtel", true, true, "Neuchâtel", "Neuchâtel", Canton.NE, Canton.BE, Canton.BE,
+            true, true, new BigDecimal(4000), new BigDecimal(5000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
+    assertThat(result).isEqualTo("Parent2");
+  }
 
 }
