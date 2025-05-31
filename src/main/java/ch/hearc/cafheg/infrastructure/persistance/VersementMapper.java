@@ -119,7 +119,7 @@ public class VersementMapper extends Mapper {
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 long count = resultSet.getLong(1);
-                log.info("Nombre de versements pour l'allocataire ID {}: {}", allocataireId, count);
+                log.debug("Nombre de versements pour l'allocataire ID {}: {}", allocataireId, count);
                 return count;
             }
             return 0L;

@@ -36,13 +36,13 @@ public class AllocataireMapper extends Mapper {
                         .prepareStatement(QUERY_FIND_WHERE_NOM_LIKE);
                 preparedStatement.setString(1, likeNom + "%");
             }
-            log.info("Allocation d'un nouveau tableau");
+            log.debug("Allocation d'un nouveau tableau");
             List<Allocataire> allocataires = new ArrayList<>();
 
-            log.info("Exécution de la requête");
+            log.debug("Exécution de la requête");
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
 
-                log.info("Allocataire mapping");
+                log.debug("Allocataire mapping");
                 while (resultSet.next()) {
                     log.trace("ResultSet#next");
                     allocataires
@@ -50,7 +50,7 @@ public class AllocataireMapper extends Mapper {
                                     resultSet.getString(1)));
                 }
             }
-            log.info("Nombre d'allocataires trouvés: {}", allocataires.size());
+            log.debug("Nombre d'allocataires trouvés: {}", allocataires.size());
             return allocataires;
         } catch (SQLException e) {
             log.error("Erreur lors de l'exécution de findAll", e);
@@ -68,7 +68,7 @@ public class AllocataireMapper extends Mapper {
             ResultSet resultSet = preparedStatement.executeQuery();
             log.trace("ResultSet#next");
             if (resultSet.next()) {
-                log.info("Allocataire mapping");
+                log.debug("Allocataire mapping");
                 return new Allocataire(new NoAVS(resultSet.getString(1)),
                         resultSet.getString(2), resultSet.getString(3));
             } else {
@@ -126,7 +126,7 @@ public class AllocataireMapper extends Mapper {
             preparedStatement.setLong(3, id);
             int rowsAffected = preparedStatement.executeUpdate();
             boolean updated = rowsAffected > 0;
-            log.info("Mise à jour {} pour l'ID={}", updated ? "réussie" : "échouée", id);
+            log.debug("Mise à jour {} pour l'ID={}", updated ? "réussie" : "échouée", id);
             return updated;
         } catch (SQLException e) {
             log.error("Erreur lors de la mise à jour de l'allocataire ID={}", id, e);

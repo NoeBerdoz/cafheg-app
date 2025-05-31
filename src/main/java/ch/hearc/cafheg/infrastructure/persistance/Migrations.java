@@ -23,7 +23,7 @@ public class Migrations {
      * Exécution des migrations
      */
     public void start() {
-        log.info("Démarrage des migrations");
+        log.debug("Démarrage des migrations");
 
         String location;
         // Pour les tests, on éxécute que les scripts DDL (création de tables)
@@ -40,7 +40,7 @@ public class Migrations {
                 .load();
 
         flyway.migrate();
-        log.info("Migrations terminées");
+        log.debug("Migrations terminées");
     }
 
 }

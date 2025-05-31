@@ -35,7 +35,7 @@ public class AllocationMapper extends Mapper {
                                 Canton.fromValue(resultSet.getString(3)), resultSet.getDate(4).toLocalDate(),
                                 resultSet.getDate(5) != null ? resultSet.getDate(5).toLocalDate() : null));
             }
-            log.info("Nombre d'allocations récupérées : {}", allocations.size());
+            log.debug("Nombre d'allocations récupérées : {}", allocations.size());
             return allocations;
         } catch (SQLException e) {
             log.error("Erreur SQL lors de la récupération des allocations", e);

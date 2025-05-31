@@ -43,7 +43,7 @@ public class Database {
      * @return Le résultat de l'éxécution de la fonction
      */
     public static <T> T inTransaction(Supplier<T> inTransaction) {
-        log.info("inTransaction#start");
+        log.debug("inTransaction#start");
         try {
             log.debug("inTransaction#getConnection");
             connection.set(dataSource.getConnection());
@@ -58,7 +58,7 @@ public class Database {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-            log.info("inTransaction#end");
+            log.debug("inTransaction#end");
             connection.remove();
         }
     }
@@ -71,12 +71,12 @@ public class Database {
      * Initialisation du pool de connections.
      */
     public void start() {
-        log.info("Initialisation du datasource");
+        log.debug("Initialisation du datasource");
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:h2:mem:sample");
         config.setMaximumPoolSize(20);
         config.setDriverClassName("org.h2.Driver");
         dataSource = new HikariDataSource(config);
-        log.info("Datasource initialisé");
+        log.debug("Datasource initialisé");
     }
 }
