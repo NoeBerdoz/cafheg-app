@@ -16,9 +16,9 @@ import org.mockito.Mockito;
 class AllocationServiceTest {
 
   private AllocationService allocationService;
-
   private AllocataireMapper allocataireMapper;
   private AllocationMapper allocationMapper;
+  private DroitsAllocations droitsAllocations;
 
   @BeforeEach
   void setUp() {
@@ -70,62 +70,55 @@ class AllocationServiceTest {
 
   @Test
   void givenParent1ActiveAndParent2Inactive_ShouldReturnParent1() {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("parent1ActiviteLucrative", true);
-    parameters.put("parent2ActiviteLucrative", false);
-    String result = allocationService.getParentDroitAllocation(parameters);
+    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
+            "Bienne", false, true, new BigDecimal(5000), new BigDecimal(4000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent1");
   }
 
   @Test
   void givenParent1InactiveAndParent2Active_ShouldReturnParent2() {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("parent1ActiviteLucrative", false);
-    parameters.put("parent2ActiviteLucrative", true);
-    String result = allocationService.getParentDroitAllocation(parameters);
+    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", false,
+            "Bienne", true, true, new BigDecimal(5000), new BigDecimal(4000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent2");
   }
 
   @Test
   void givenBothParentsActive_ShouldReturnParentWithHigherSalary() {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("parent1ActiviteLucrative", true);
-    parameters.put("parent2ActiviteLucrative", true);
-    parameters.put("parent1Salaire", new BigDecimal(5000));
-    parameters.put("parent2Salaire", new BigDecimal(4000));
-    String result = allocationService.getParentDroitAllocation(parameters);
+    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
+            "Bienne", true, true, new BigDecimal(5000), new BigDecimal(4000));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent1");
   }
 
   @Test
     void givenBothParentsActiveWithEqualSalary_ShouldReturnParent2() {
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("parent1ActiviteLucrative", true);
-        parameters.put("parent2ActiviteLucrative", true);
-        parameters.put("parent1Salaire", new BigDecimal(4000));
-        parameters.put("parent2Salaire", new BigDecimal(4000));
-        String result = allocationService.getParentDroitAllocation(parameters);
+        droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
+                "Bienne", true, true, new BigDecimal(4000), new BigDecimal(4000));
+        String result = allocationService.getParentDroitAllocation(droitsAllocations);
         assertThat(result).isEqualTo("Parent2");
     }
 
   @Test
   void givenBothParentsInactive_ShouldReturnParent2() {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("parent1ActiviteLucrative", false);
-    parameters.put("parent2ActiviteLucrative", false);
-    String result = allocationService.getParentDroitAllocation(parameters);
+    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", false,
+            "Bienne", false, true, new BigDecimal(0), new BigDecimal(0));
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent2");
   }
 
+  /* Ceci n'est plus possible car parent1Salaire et parent2Salaire ne peuvent pas être null
   @Test
   void givenBothParentsActiveWithMissingSalary_ShouldReturnParent2() {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("parent1ActiviteLucrative", true);
-    parameters.put("parent2ActiviteLucrative", true);
-    String result = allocationService.getParentDroitAllocation(parameters);
+    droitsAllocations = new DroitsAllocations( "Neuchâtel", "Neuchâtel", true,
+            "Bienne", true, true, null, null);
+    String result = allocationService.getParentDroitAllocation(droitsAllocations);
     assertThat(result).isEqualTo("Parent2");
   }
+  */
 
+  /* Ceci n'est plus possible car parent1Salaire et parent2Salaire sont de type BigDecimal
   @Test
   void givenIncorrectSalaryParameters_ShouldReturnParent2() {
     Map<String, Object> parameters = new HashMap<>();
@@ -135,24 +128,12 @@ class AllocationServiceTest {
     parameters.put("parent2Salaire", "David");
 
     assertThrows(ClassCastException.class, () ->
-      allocationService.getParentDroitAllocation(parameters)
+      allocationService.getParentDroitAllocation(droitsAllocations)
     );
     // Avec des paramètres non valides, on ne peut pas tester le résultat sans la ligne ci-dessus
     // La méthode getParentDroitAllocation va lever une ClassCastException
     // String result = allocationService.getParentDroitAllocation(parameters);
     // assertThat(result).isEqualTo("Parent2");
-  }
-
-  @Test
-  void givenMissingSalaryParameterForParent2_ShouldReturnParent1() {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("parent1ActiviteLucrative", true);
-    parameters.put("parent2ActiviteLucrative", true);
-    parameters.put("parent1Salaire", new BigDecimal("4000"));
-    // parameters.put("parent2Salaire", new BigDecimal("3000")); --> Missing parameter
-
-    String result = allocationService.getParentDroitAllocation(parameters);
-    assertThat(result).isEqualTo("Parent1");
-  }
+  }*/
 
 }

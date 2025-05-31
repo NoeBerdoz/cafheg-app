@@ -4,7 +4,6 @@ import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 public class AllocationService {
 
@@ -32,35 +31,45 @@ public class AllocationService {
 
     /**
      * Méthode qui détermine quel parent a le droit aux allocations
-     * @param parameters Paramètres de la requête
+     * @param droitsAllocations Paramètres de la requête
      * @return Le parent qui a le droit aux allocations
       1 seul parent actif (Soit P1, soit P2)
       Les 2 parents sont actifs --> On compare les salaires
       Les 2 parents sont actifs et ont le même salaire --> On retourne P2 (car pas strictement plus grand que P1)
       Les 2 parents sont inactifs --> On retourne P2 (car pas strictement plus grand que P1)
-      La map fournie en paramètre ne contient pas les valeurs nécessaires
+      Plus valable avec la classe -> La map fournie en paramètre ne contient pas les valeurs nécessaires
         --> getOrDefault renvoie la valeur par défaut et donc P2 doit être retourné
       La résidence de l'enfant et des parents n'a aucun impact sur le droit aux allocations
     */
-  public String getParentDroitAllocation(Map<String, Object> parameters) {
+  public String getParentDroitAllocation(DroitsAllocations droitsAllocations) {
     System.out.println("Déterminer quel parent a le droit aux allocations");
-    String eR = (String)parameters.getOrDefault("enfantResidence", "");
-    Boolean p1AL = (Boolean)parameters.getOrDefault("parent1ActiviteLucrative", false);
-    String p1Residence = (String)parameters.getOrDefault("parent1Residence", "");
-    Boolean p2AL = (Boolean)parameters.getOrDefault("parent2ActiviteLucrative", false);
-    String p2Residence = (String)parameters.getOrDefault("parent2Residence", "");
-    Boolean pEnsemble = (Boolean)parameters.getOrDefault("parentsEnsemble", false);
-    Number salaireP1 = (Number) parameters.getOrDefault("parent1Salaire", BigDecimal.ZERO);
-    Number salaireP2 = (Number) parameters.getOrDefault("parent2Salaire", BigDecimal.ZERO);
+    Boolean p1AL = droitsAllocations.getParent1ActiviteLucrative();
+    Boolean p2AL = droitsAllocations.getParent2ActiviteLucrative();
+    BigDecimal salaireP1 = droitsAllocations.getParent1Salaire();
+    BigDecimal salaireP2 = droitsAllocations.getParent2Salaire();
+    String enfantResidence = droitsAllocations.getEnfantResidence();
+    String parent1Residence = droitsAllocations.getParent1Residence();
+    String parent2Residence = droitsAllocations.getParent2Residence();
+    Boolean parentsEnsemble = droitsAllocations.getParentsEnsemble();
 
-    if(p1AL && !p2AL) { //AL : Activité Lucrative... Pas allocataire !
-      return PARENT_1;
+    if (!parentsEnsemble) {
+      if (enfantResidence.equals(parent1Residence)) {
+        return PARENT_1;
+      } else if (enfantResidence.equals(parent2Residence)) {
+        return PARENT_2;
+      }
+    } else {
+      if(p1AL && !p2AL) {
+        return PARENT_1;
+      } else if(!p1AL && p2AL) {
+        return PARENT_2;
+      } else if (!p1AL && !p2AL) {
+        // Si les deux parents sont inactifs, on retourne PARENT_2
+        return PARENT_2;
+      }
     }
 
-    if(p2AL && !p1AL) {
-      return PARENT_2;
-    }
-
+    //Si les parents sont ensemble et les deux actifs, on compare les salaires
     return salaireP1.doubleValue() > salaireP2.doubleValue() ? PARENT_1 : PARENT_2;
   }
 }
