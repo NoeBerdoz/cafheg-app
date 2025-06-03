@@ -3,6 +3,7 @@ package ch.hearc.cafheg.infrastructure.pdf;
 import ch.hearc.cafheg.business.allocations.Allocataire;
 import ch.hearc.cafheg.business.versements.Enfant;
 import ch.hearc.cafheg.business.common.Montant;
+import ch.hearc.cafheg.infrastructure.api.RESTController;
 import ch.hearc.cafheg.infrastructure.persistance.EnfantMapper;
 
 import java.io.ByteArrayOutputStream;
@@ -14,9 +15,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PDFExporter {
 
+    private static final Logger log = LoggerFactory.getLogger(PDFExporter.class);
     private final EnfantMapper enfantMapper;
 
     public PDFExporter(EnfantMapper enfantMapper) {
@@ -25,7 +29,7 @@ public class PDFExporter {
 
     public byte[] generatePDFVversement(Allocataire allocataire,
                                         Map<LocalDate, Montant> montantParMois) {
-        System.out.println("Génération du PDF des versements");
+        log.debug("Génération du PDF des versements");
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PDDocument document = new PDDocument();
@@ -64,7 +68,7 @@ public class PDFExporter {
             document.save(baos);
             document.close();
 
-            System.out.println("PDF généré");
+            log.debug("PDF généré");
             return baos.toByteArray();
 
 
@@ -76,7 +80,7 @@ public class PDFExporter {
 
     public byte[] generatePDFAllocataire(Allocataire allocataire,
                                          Map<Long, Montant> montantsParEnfant) {
-        System.out.println("Génération du PDF pour un allocataire");
+        log.debug("Génération du PDF pour un allocataire");
 
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -119,7 +123,7 @@ public class PDFExporter {
             document.save(baos);
             document.close();
 
-            System.out.println("PDF généré");
+            log.debug ("PDF généré");
             return baos.toByteArray();
         } catch (
                 IOException e) {
