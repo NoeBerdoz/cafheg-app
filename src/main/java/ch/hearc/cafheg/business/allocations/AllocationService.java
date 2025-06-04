@@ -31,7 +31,7 @@ public class AllocationService {
     }
 
     public List<Allocataire> findAllAllocataires(String likeNom) {
-        log.info("Service: Recherche des allocataires", likeNom);
+        log.info("Service: Recherche des allocataires {}", likeNom);
         return allocataireMapper.findAll(likeNom);
     }
 
@@ -126,7 +126,7 @@ public class AllocationService {
 
         Allocataire allocataire = allocataireMapper.findById(allocataireId);
         if (allocataire == null) {
-            log.warn("Allocataire non trouvé avec ID: " + allocataireId);
+            log.warn("Allocataire à supprimé non trouvé avec ID: {}", allocataireId);
             throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + " n'a pas été trouvé.");
         }
 
@@ -174,7 +174,7 @@ public class AllocationService {
 
         Allocataire existingAllocataire = allocataireMapper.findById(allocataireId);
         if (existingAllocataire == null) {
-            log.warn("Allocataire non trouvé avec ID: {}", allocataireId);
+            log.warn("Allocataire à mettre à jour non trouvé avec ID: {}", allocataireId);
             throw new AllocataireNotFoundException("L'allocataire avec ID: " + allocataireId + "n'a pas été trouvé");
         }
 

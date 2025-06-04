@@ -74,6 +74,9 @@ public class PDFExporter {
 
         } catch (
                 IOException e) {
+            log.error("Erreur IO lors de la génération du PDF des versements pour l'allocataire {} NoAVS {}",
+                    allocataire != null ? allocataire.getNom() : "N/A",
+                    allocataire != null && allocataire.getNoAVS() != null ? allocataire.getNoAVS().getValue() : "N/A", e);
             throw new RuntimeException(e);
         }
     }
@@ -123,11 +126,13 @@ public class PDFExporter {
             document.save(baos);
             document.close();
 
-            log.debug ("PDF généré");
+            log.debug("PDF généré");
             return baos.toByteArray();
         } catch (
                 IOException e) {
-            throw new RuntimeException(e);
-        }
+            log.error("Erreur IO lors de la génération du PDF pour l'allocataire {} NoAVS {}",
+                    allocataire != null ? allocataire.getNom() : "N/A",
+                    allocataire != null && allocataire.getNoAVS() != null ? allocataire.getNoAVS().getValue() : "N/A", e);
+            throw new RuntimeException(e);        }
     }
 }
