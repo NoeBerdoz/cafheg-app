@@ -21,7 +21,6 @@
 
     <!-- Appender : logs INFO des services -> cafheg_{date-jour}.log -->
     <appender name="SERVICE_INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/cafheg.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logs/cafheg_%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
