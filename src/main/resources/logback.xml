@@ -50,7 +50,7 @@
     </logger>
 
     <!-- Logger pour les services -->
-    <logger name="ch.services" level="INFO" additivity="false">
+    <logger name="ch.hearc.cafheg.business" level="INFO" additivity="false">
         <appender-ref ref="SERVICE_INFO_FILE" />
     </logger>
 
