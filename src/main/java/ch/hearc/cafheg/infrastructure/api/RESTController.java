@@ -15,6 +15,8 @@ import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.AllocationMapper;
 import ch.hearc.cafheg.infrastructure.persistance.EnfantMapper;
 import ch.hearc.cafheg.infrastructure.persistance.VersementMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,8 @@ import java.util.*;
 
 @RestController
 public class RESTController {
+
+    private static final Logger log = LoggerFactory.getLogger(RESTController.class);
 
     private final AllocationService allocationService;
     private final VersementService versementService;
@@ -124,7 +128,7 @@ public class RESTController {
         } catch (AllocataireHasVersementsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (RuntimeException e) {
-            System.out.println("Erreur lors de la suppression d'un allocataire : " + e.getMessage());
+            log.error("Erreur lors de la suppression d'un allocataire : ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -172,7 +176,7 @@ public class RESTController {
         } catch (NoChangeToUpdateException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
-            System.out.println("Erreur lors de la mise à jour d'un allocataire : " + e.getMessage());
+            log.error("Erreur lors de la mise à jour d'un allocataire : ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

@@ -7,6 +7,8 @@ import ch.hearc.cafheg.business.common.Montant;
 import ch.hearc.cafheg.infrastructure.pdf.PDFExporter;
 import ch.hearc.cafheg.infrastructure.persistance.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistance.VersementMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class VersementService {
+
+    private static final Logger log = LoggerFactory.getLogger(VersementService.class);
 
     private final VersementMapper versementMapper;
     private final AllocataireMapper allocataireMapper;
@@ -29,7 +33,7 @@ public class VersementService {
     }
 
     public byte[] exportPDFVersements(long allocataireId) {
-        System.out.println("Exporter le PDF des versements pour l'allocataire " + allocataireId);
+        log.info("Exporter le PDF des versements pour l'allocataire {}", allocataireId);
         List<VersementParentParMois> versementParentEnfantParMois = versementMapper
                 .findVersementParentEnfantParMois();
 
@@ -45,21 +49,21 @@ public class VersementService {
     }
 
     public Montant findSommeAllocationNaissanceParAnnee(int year) {
-        System.out.println("Rechercher la somme des allocations de naissances pour l'année " + year);
+        log.info("Rechercher la somme des allocations de naissances pour l'année {}", year);
         List<VersementAllocationNaissance> versements = versementMapper
                 .findAllVersementAllocationNaissance();
         return VersementAllocationNaissance.sommeParAnnee(versements, year);
     }
 
     public Montant findSommeAllocationParAnnee(int year) {
-        System.out.println("Rechercher la somme des allocations  " + year);
+        log.info("Rechercher la somme des allocations pour l'année {}", year);
         List<VersementAllocation> versements = versementMapper
                 .findAllVersementAllocation();
         return VersementAllocation.sommeParAnnee(versements, year);
     }
 
     public byte[] exportPDFAllocataire(long allocataireId) {
-        System.out.println("Exporter les PDF pour l'allocataire:  " + allocataireId);
+        log.info("Exporter les PDF pour l'allocataire: {}", allocataireId);
         List<VersementParentEnfant> versements = versementMapper.findVersementParentEnfant();
 
         Map<Long, Montant> montantsParEnfant = versements.stream()
