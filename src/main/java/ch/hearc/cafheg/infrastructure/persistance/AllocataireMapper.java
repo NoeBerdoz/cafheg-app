@@ -45,9 +45,10 @@ public class AllocataireMapper extends Mapper {
                 log.trace("Allocataire mapping");
                 while (resultSet.next()) {
                     log.trace("ResultSet#next");
+                    // Correction du mapping : NOM puis PRENOM
                     allocataires
-                            .add(new Allocataire(new NoAVS(resultSet.getString(3)), resultSet.getString(2),
-                                    resultSet.getString(1)));
+                            .add(new Allocataire(new NoAVS(resultSet.getString(3)), resultSet.getString(1),
+                                    resultSet.getString(2)));
                 }
             }
             log.debug("Nombre d'allocataires trouvés: {}", allocataires.size());

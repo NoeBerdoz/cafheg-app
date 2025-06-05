@@ -1,0 +1,10 @@
+<dataset>
+    <!-- Allocataire sans versement -->
+    <ALLOCATAIRES NUMERO="1" NO_AVS="7561234567890" NOM="Durand" PRENOM="Alice"/>
+
+    <!-- Allocataire avec un versement -->
+    <ALLOCATAIRES NUMERO="2" NO_AVS="7569876543210" NOM="Martin" PRENOM="Jean"/>
+
+    <!-- Versement lié à Jean Martin (NUMERO=2) -->
+    <VERSEMENTS NUMERO="1" FK_ALLOCATAIRES="2" DATE_VERSEMENT="2024-01-01" MOIS_VERSEMENT="2024-01-01"/>
+</dataset>
