@@ -66,7 +66,7 @@ public class AllocataireMapperIT {
             }
         }
     }
-/*
+
     @Test
     void testSupprimerAllocataireSansVersement() {
         Database.inTransaction(() -> {
@@ -85,26 +85,36 @@ public class AllocataireMapperIT {
             return null;
         });
     }
-*/
+
     @Test
     void testModifierNomAllocataire() {
-        Database.inTransaction(() -> {
-            Allocataire a = service.findAllAllocataires(null).stream()
-                .filter(x -> x.getNoAVS().getValue().replace(".", "").equals("7569876543210"))
-                .findFirst().orElse(null);
-            assertThat(a).isNotNull();
-            // Modification via le service
-            Allocataire modifie = service.updateAllocataire(2L, "Dupont", a.getPrenom()); // NUMERO=2 dans dataset.xml
-            assertThat(modifie).isNotNull();
-            assertThat(modifie.getNom()).isEqualTo("Dupont");
-            // Vérification en base via le service
-            Allocataire verif = service.findAllAllocataires(null).stream()
-                .filter(x -> x.getNoAVS().getValue().replace(".", "").equals("7569876543210"))
-                .findFirst().orElse(null);
-            System.out.println("Nom en base après modification : " + (verif != null ? verif.getNom() : "null"));
-            assertThat(verif).isNotNull();
-            assertThat(verif.getNom()).isEqualTo("Dupont");
-            return null;
-        });
+        try {
+            Database.inTransaction(() -> {
+                // Affiche tous les allocataires présents avant modification
+                System.out.println("[DEBUG] Liste allocataires avant modification :");
+                service.findAllAllocataires(null).forEach(x -> System.out.println("NUMERO=" + 2L + ", NOM=" + x.getNom() + ", PRENOM=" + x.getPrenom() + ", NO_AVS=" + x.getNoAVS().getValue()));
+                Allocataire a = service.findAllAllocataires(null).stream()
+                    .filter(x -> x.getNoAVS().getValue().replace(".", "").equals("7569876543210"))
+                    .findFirst().orElse(null);
+                System.out.println("[DEBUG] Avant modification, nom=" + (a != null ? a.getNom() : "null"));
+                assertThat(a).isNotNull();
+                // Modification via le service
+                Allocataire modifie = service.updateAllocataire(2L, "Dupont", a.getPrenom()); // NUMERO=2 dans dataset.xml
+                System.out.println("[DEBUG] Après modification, nom=" + (modifie != null ? modifie.getNom() : "null"));
+                assertThat(modifie).isNotNull();
+                assertThat(modifie.getNom()).isEqualTo("Dupont");
+                // Vérification en base via le service
+                Allocataire verif = service.findAllAllocataires(null).stream()
+                    .filter(x -> x.getNoAVS().getValue().replace(".", "").equals("7569876543210"))
+                    .findFirst().orElse(null);
+                System.out.println("[DEBUG] Après vérification, nom en base=" + (verif != null ? verif.getNom() : "null"));
+                assertThat(verif).isNotNull();
+                assertThat(verif.getNom()).isEqualTo("Dupont");
+                return null;
+            });
+        } catch (Exception e) {
+            System.out.println("[DEBUG] Exception capturée dans le test : " + e);
+            throw e;
+        }
     }
 }
